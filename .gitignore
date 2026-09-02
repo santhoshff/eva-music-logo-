@@ -1,0 +1,26 @@
+# Dependencies
+node_modules/
+eva-music-app/node_modules/
+eva-music-backend/node_modules/
+
+# Production build output
+dist/
+eva-music-app/dist/
+eva-music-backend/dist/
+
+# Local Environment & Secrets
+.env
+eva-music-app/.env.local
+eva-music-backend/.env.local
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+*.log
+
+# Editor & OS files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200" fill="none">
+  <!-- Headphone Arc -->
+  <path d="M 40 105 A 60 60 0 0 1 160 105" stroke="#1e1b4b" stroke-width="14" stroke-linecap="round" fill="none" />
+  
+  <!-- Left Ear Cushion -->
+  <rect x="26" y="92" width="18" height="42" rx="9" fill="#1e1b4b" />
+  <rect x="36" y="97" width="6" height="32" rx="3" fill="#312e81" />
+  
+  <!-- Right Ear Cushion -->
+  <rect x="156" y="92" width="18" height="42" rx="9" fill="#1e1b4b" />
+  <rect x="158" y="97" width="6" height="32" rx="3" fill="#312e81" />
+  
+  <!-- Musical Eighth Note Center -->
+  <!-- Note Head -->
+  <ellipse cx="88" cy="130" rx="14" ry="11" transform="rotate(-20 88 130)" fill="#1e1b4b" />
+  <!-- Note Stem -->
+  <rect x="96" y="65" width="8" height="65" fill="#1e1b4b" rx="2" />
+  <!-- Note Flag -->
+  <path d="M 104 65 C 122 75 130 95 110 115 C 120 95 114 78 104 70 Z" fill="#1e1b4b" />
+</svg>

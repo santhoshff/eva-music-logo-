@@ -1,0 +1,8 @@
+{
+  "name": "EVA MUSIC",
+  "description": "Vibrant music streaming app with glassmorphism design, personalized recommendations, browse categories, library management, and interactive audio player.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

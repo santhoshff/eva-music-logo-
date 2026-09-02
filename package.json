@@ -1,0 +1,19 @@
+{
+  "name": "eva-music-workspace",
+  "private": true,
+  "workspaces": [
+    "eva-music-app",
+    "eva-music-backend"
+  ],
+  "scripts": {
+    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "dev:backend": "npm run dev --workspace=eva-music-backend",
+    "dev:frontend": "npm run dev --workspace=eva-music-app",
+    "build:backend": "npm run build --workspace=eva-music-backend",
+    "build:frontend": "npm run build --workspace=eva-music-app",
+    "lint:frontend": "npm run lint --workspace=eva-music-app"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.4"
+  }
+}

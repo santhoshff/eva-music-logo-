@@ -1,0 +1,29 @@
+{
+  "name": "eva-music-backend",
+  "version": "1.0.0",
+  "description": "Fastify + Supabase + Innertube API backend for EVA AI Music Streaming App",
+  "main": "dist/server.js",
+  "scripts": {
+    "dev": "tsx watch src/server.ts",
+    "build": "npx tsc",
+    "seed": "tsx src/scripts/seedSongs.ts",
+    "start": "node dist/server.js"
+  },
+  "dependencies": {
+    "@fastify/cors": "^10.0.2",
+    "@fastify/websocket": "^11.0.2",
+    "@supabase/supabase-js": "^2.49.1",
+    "@types/crypto-js": "^4.2.2",
+    "crypto-js": "^4.2.0",
+    "dotenv": "^16.4.7",
+    "fastify": "^5.2.1",
+    "ioredis": "^5.6.0",
+    "youtubei.js": "^17.2.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.1",
+    "@types/ws": "^8.18.1",
+    "tsx": "^4.19.3",
+    "typescript": "^5.7.3"
+  }
+}

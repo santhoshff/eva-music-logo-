@@ -1,0 +1,10 @@
+EVA AI Music delivers a next-generation, premium listening experience with ad-free audio streaming, powered by Echo Brain—an intelligent on-device contextual AI recommendation engine.
+
+Features:
+* Ad-Free High-Fidelity Audio — Stream 320kbps audio with smooth byte-range seeking and zero interruptions.
+* Echo Brain AI Engine — 100% on-device neural engine that analyzes listening momentum and injects contextual track recommendations into your queue.
+* "Why this song?" Transparency — View real-time AI reasoning for every recommended track in your queue.
+* SimpMusic Synced Lyrics — Real-time word-by-word synced lyrics powered by SimpMusic and LRCLIB APIs.
+* Randomized On-Visit Catalog — Discover fresh, randomized track selections and vibe playlists every single time you launch the app.
+* Gen Z Aesthetic Design — Sleek dark-mode glassmorphism interface with HSL gradients, micro-animations, and equalizer presets.
+* Supabase Cloud Sync — Seamlessly backup your profile, stream stats, listening streaks, and favorite tracks.
