@@ -8,16 +8,12 @@ export interface EvaBrainPersona {
   isEnabled: boolean;
 }
 
-export type EchoBrainPersona = EvaBrainPersona;
-
 export interface EvaBrainRecommendation {
   track: Track;
   reason: string;
   score: number;
   matchPercentage: number;
 }
-
-export type EchoBrainRecommendation = EvaBrainRecommendation;
 
 const STORAGE_KEY = 'eva_brain_persona_v1';
 
@@ -368,5 +364,3 @@ class EvaBrainService {
 }
 
 export const evaBrainService = new EvaBrainService();
-export const echoBrainService = evaBrainService;
-export { EvaBrainService as EchoBrainService };

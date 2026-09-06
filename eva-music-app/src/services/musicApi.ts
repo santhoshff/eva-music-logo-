@@ -1,51 +1,5 @@
 import { Track } from '../types';
-import { apiSearch, apiGetLyrics, apiGetRecommendations } from './backendApi';
-
-export interface LyricsResponse {
-  id?: number;
-  trackName?: string;
-  artistName?: string;
-  albumName?: string;
-  duration?: number;
-  plainLyrics?: string;
-  syncedLyrics?: string;
-}
-
-export async function fetchLyrics(trackTitle: string, artistName: string, trackId?: string): Promise<string[]> {
-  if (trackId) {
-    const backendLyrics = await apiGetLyrics(trackId, trackTitle, artistName);
-    if (backendLyrics && backendLyrics.length > 0) return backendLyrics;
-  }
-
-  try {
-    const cleanTitle = cleanText(trackTitle).replace(/\(From.*?\)/gi, '').replace(/\(Original.*?\)/gi, '').trim();
-    const url = `https://lrclib.net/api/get?track_name=${encodeURIComponent(cleanTitle)}&artist_name=${encodeURIComponent(artistName)}`;
-    const res = await fetch(url);
-    if (res.ok) {
-      const data: LyricsResponse = await res.json();
-      if (data.plainLyrics) {
-        return data.plainLyrics.split('\n').filter(line => line.trim().length > 0);
-      }
-      if (data.syncedLyrics) {
-        return data.syncedLyrics
-          .split('\n')
-          .map(line => line.replace(/\[\d{2}:\d{2}\.\d{2}\]/g, '').trim())
-          .filter(line => line.length > 0);
-      }
-    }
-  } catch {
-    // Fallback
-  }
-
-  return [
-    `🎵 ${cleanText(trackTitle)} - ${cleanText(artistName)}`,
-    "Feel the full frequency in your soul...",
-    "Vibing with the rhythm of the beat,",
-    "Every moment carrying us through the night.",
-    "Echoing through the endless sky,",
-    "Listen to the sound elevate high."
-  ];
-}
+import { apiSearch, apiGetRecommendations } from './backendApi';
 
 export async function fetchTopTrendingHits(preferredGenre?: string): Promise<Track[]> {
   const backendRecs = await apiGetRecommendations(undefined, preferredGenre);

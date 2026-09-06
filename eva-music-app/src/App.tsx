@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { Header } from './components/Header';
-import { CategoryPills } from './components/CategoryPills';
 import { HomeScreen } from './components/HomeScreen';
 import { DiscoverScreen } from './components/DiscoverScreen';
 import { LibraryScreen } from './components/LibraryScreen';
@@ -17,7 +16,7 @@ import { INITIAL_TRACKS, FEATURED_PLAYLISTS, POPULAR_ARTISTS, GENRE_CATEGORIES, 
 import { audioEngine } from './services/audioEngine';
 import { fetchTopTrendingHits } from './services/musicApi';
 import { evaBrainService } from './services/evaBrainService';
-import { syncUserProfileToSupabase, syncLikedSongToSupabase } from './services/supabaseClient';
+import { syncUserProfileToSupabase } from './services/supabaseClient';
 import { apiToggleFavorite } from './services/backendApi';
 import { NavTab, Track, Artist, Playlist, GenreCategory, UserProfile } from './types';
 
@@ -25,7 +24,6 @@ const LOCAL_STORAGE_KEY_INSTALLED = 'eva_installed_local_tracks';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<NavTab>('home');
-  const [selectedCategory, setSelectedCategory] = useState<string>('All');
   
   const [tracks, setTracks] = useState<Track[]>(() => {
     const baseTracks = getRandomizedTracks();
@@ -160,7 +158,6 @@ export default function App() {
       prev.map(t => {
         if (t.id === trackId) {
           const nextLiked = !t.isLiked;
-          syncLikedSongToSupabase(t, nextLiked);
           apiToggleFavorite(t, nextLiked);
           evaBrainService.recordLike(t, nextLiked);
           return { ...t, isLiked: nextLiked };
@@ -203,11 +200,6 @@ export default function App() {
     });
   };
 
-  // Category Filtered Tracks
-  const filteredTracks = selectedCategory === 'All'
-    ? tracks
-    : tracks.filter(t => t.genre.toLowerCase().includes(selectedCategory.toLowerCase()));
-
   return (
     <div className="relative min-h-screen w-full bg-[#fcf8ff] text-slate-900 font-sans selection:bg-purple-200 antialiased overflow-x-hidden">
       {/* Ambient Glassmorphism Gradient Background Lights */}
@@ -224,10 +216,7 @@ export default function App() {
           userName={userProfile.name}
           userAvatarUrl={userProfile.avatarUrl}
           onOpenSearch={() => setActiveTab('discover')}
-          onOpenFavorites={() => {
-            setSelectedCategory('All');
-            setActiveTab('library');
-          }}
+          onOpenFavorites={() => setActiveTab('library')}
           onOpenProfile={() => setIsProfileOpen(true)}
           title={activeTab === 'discover' ? 'Discover' : activeTab === 'library' ? 'EVA MUSIC' : undefined}
         />
@@ -236,7 +225,7 @@ export default function App() {
         <main className="flex-1 mt-3">
           {activeTab === 'home' && (
             <HomeScreen
-              tracks={filteredTracks}
+              tracks={tracks}
               playlists={playlists}
               artists={artists}
               currentTrackId={currentTrackId}
@@ -260,7 +249,7 @@ export default function App() {
 
           {activeTab === 'library' && (
             <LibraryScreen
-              tracks={filteredTracks}
+              tracks={tracks}
               currentTrackId={currentTrackId}
               isPlaying={playerState.isPlaying}
               onPlayTrack={handlePlayTrack}

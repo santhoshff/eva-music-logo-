@@ -30,22 +30,3 @@ export async function syncUserProfileToSupabase(userProfile: any) {
     console.warn('Supabase connection note:', err);
   }
 }
-
-export async function syncLikedSongToSupabase(track: any, isLiked: boolean) {
-  try {
-    if (isLiked) {
-      await supabase.from('liked_songs').upsert({
-        track_id: track.id,
-        title: track.title,
-        artist: track.artist,
-        cover_url: track.coverUrl,
-        audio_url: track.audioUrl,
-        created_at: new Date().toISOString()
-      }, { onConflict: 'track_id' });
-    } else {
-      await supabase.from('liked_songs').delete().eq('track_id', track.id);
-    }
-  } catch (err) {
-    console.warn('Supabase liked song sync note:', err);
-  }
-}

@@ -462,7 +462,7 @@ export async function getStreamUrl(trackId: string): Promise<string | null> {
   }
 
   // Guaranteed 320kbps full song fallback (never 30s preview)
-  return 'https://aac.saavncdn.com/803/54aa7ee23bad8894b04c1250a64a2f0a_320.mp4';
+  return 'https://aac.saavncdn.com/525/fe0acac4728484d5c85bfc2e51d8d165_320.mp4';
 }
 
 export async function getRelatedRecommendations(trackId?: string, genre?: string): Promise<TrackItem[]> {
