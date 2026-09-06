@@ -1,6 +1,6 @@
-# EVA AI Music — Setup & Development Guide
+# EVA Music — Setup & Development Guide
 
-This document provides step-by-step instructions for installing, configuring, and building the **EVA AI Music** project from source.
+This document provides step-by-step instructions for installing, configuring, and building the **EVA Music** project from source.
 
 ---
 
@@ -88,5 +88,4 @@ To verify that the local audio streaming pipeline is functioning correctly:
 ## 📜 Documentation Links
 
 - 🏠 **[README.md](README.md)** — Project overview and architecture.
-- 🧠 **[ECHO_BRAIN_DOCS.md](ECHO_BRAIN_DOCS.md)** — Echo Brain AI Engine design.
 - 🤝 **[CONTRIBUTING.md](CONTRIBUTING.md)** — Contribution standards.

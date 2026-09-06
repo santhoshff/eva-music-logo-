@@ -1,6 +1,6 @@
 import { FastifyInstance } from 'fastify';
+import { Readable } from 'node:stream';
 import { getStreamUrl } from '../services/youtubeMusic.js';
-import { getCache, setCache } from '../services/cache.js';
 
 export async function streamRoutes(fastify: FastifyInstance) {
   fastify.route({
@@ -17,8 +17,8 @@ export async function streamRoutes(fastify: FastifyInstance) {
       let streamUrl = await getStreamUrl(trackId);
 
       if (!streamUrl) {
-        // Safe guaranteed fallback preview from Apple Music
-        streamUrl = 'https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview221/v4/61/e5/73/61e57386-fcad-ea54-2e51-20d14f56880c/mzaf_4603457977202265048.plus.aac.p.m4a';
+        // Safe guaranteed full-length 320kbps master stream fallback
+        streamUrl = 'https://aac.saavncdn.com/525/fe0acac4728484d5c85bfc2e51d8d165_320.mp4';
       }
 
       reply.header('Access-Control-Allow-Origin', '*');
@@ -29,6 +29,11 @@ export async function streamRoutes(fastify: FastifyInstance) {
       if (request.method === 'HEAD') {
         reply.header('Content-Type', 'audio/mp4');
         return reply.code(200).send();
+      }
+
+      // High-speed CDN direct 302 redirect (allows instant browser native Range seeking without server RAM overhead)
+      if (streamUrl.startsWith('https://aac.saavncdn.com')) {
+        return reply.redirect(streamUrl, 302);
       }
 
       const range = request.headers.range;
@@ -49,11 +54,14 @@ export async function streamRoutes(fastify: FastifyInstance) {
         if (contentLength) reply.header('Content-Length', contentLength);
 
         reply.code(upstream.status);
-        const arrayBuffer = await upstream.arrayBuffer();
-        return reply.send(Buffer.from(arrayBuffer));
+        if (upstream.body) {
+          const stream = Readable.fromWeb(upstream.body as any);
+          return reply.send(stream);
+        }
+        return reply.redirect(streamUrl, 302);
       } catch (err: any) {
         console.error(`[stream] proxy fetch error for trackId=${trackId}:`, err);
-        return reply.redirect(streamUrl);
+        return reply.redirect(streamUrl, 302);
       }
     },
   });

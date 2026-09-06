@@ -68,6 +68,8 @@ export const FullPlayerModal: React.FC<FullPlayerModalProps> = ({
 }) => {
   const [activeTab, setActiveTab] = useState<'player' | 'lyrics' | 'queue'>('player');
   const [lyrics, setLyrics] = useState<string[]>([]);
+  const [isDownloaded, setIsDownloaded] = useState(false);
+  const [copiedShare, setCopiedShare] = useState(false);
 
   useEffect(() => {
     if (currentTrack && activeTab === 'lyrics') {

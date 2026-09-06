@@ -1,6 +1,6 @@
-# Contributing to EVA AI Music
+# Contributing to EVA Music
 
-Thank you for your interest in contributing to **EVA AI Music**! We welcome contributions from developers of all skill levels.
+Thank you for your interest in contributing to **EVA Music**! We welcome contributions from developers of all skill levels.
 
 ---
 
@@ -39,4 +39,4 @@ All contributors are expected to adhere to our [Code of Conduct](CODE_OF_CONDUCT
 
 ## 📜 License
 
-By contributing to EVA AI Music, you agree that your contributions will be licensed under the MIT License.
+By contributing to EVA Music, you agree that your contributions will be licensed under the MIT License.

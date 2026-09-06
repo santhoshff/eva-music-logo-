@@ -1,9 +1,8 @@
-# EVA AI Music — Release Notes
+# EVA Music — Release Notes
 
 ## 🚀 Version 1.0.0 (Current Release)
 
 ### 🎉 Highlights
-- **Echo Brain AI Engine:** 100% on-device contextual music intelligence engine with Three-Pillars recommendation runway (Anchor, Momentum, Vault), neural ranking, and skip-penalty learning.
 - **Fastify Audio Proxy Server:** High-speed streaming proxy with track-scoped Redis/Memory caching, HTTP 206 Partial Content range seeking, and CORS support.
 - **Race Condition Protection:** Sequence counter (`_currentRequestId`) in `audioEngine.ts` preventing out-of-order track switching overwrites.
 - **Transparent AI Badging:** "Why this song?" transparency modal explaining AI recommendations in real-time.

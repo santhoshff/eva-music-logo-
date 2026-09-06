@@ -1,6 +1,6 @@
-# 🗺️ EVA AI Music Workspace & Architecture Guide
+# 🗺️ EVA Music Workspace & Architecture Guide
 
-This document serves as the central architectural blueprint and connection guide for the **EVA AI Music** project. It outlines the role of every workspace asset and explains exactly how the Frontend and Backend connect and communicate.
+This document serves as the central architectural blueprint and connection guide for the **EVA Music** project. It outlines the role of every workspace asset and explains exactly how the Frontend and Backend connect and communicate.
 
 ---
 

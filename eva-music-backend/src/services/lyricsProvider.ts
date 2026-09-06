@@ -26,6 +26,7 @@ async function fetchSimpMusicLyrics(videoId: string): Promise<{ plain?: string; 
           'Accept': 'application/json',
           'User-Agent': 'SimpMusicLyrics/1.0',
         },
+        signal: AbortSignal.timeout(2500),
       });
 
       if (res.ok) {
@@ -103,7 +104,7 @@ export async function fetchTrackLyrics(trackId: string, title?: string, artist?:
     try {
       const cleanTitle = title.replace(/\(From.*?\)/gi, '').replace(/\(Original.*?\)/gi, '').trim();
       const url = `https://lrclib.net/api/get?track_name=${encodeURIComponent(cleanTitle)}&artist_name=${encodeURIComponent(artist)}`;
-      const res = await fetch(url);
+      const res = await fetch(url, { signal: AbortSignal.timeout(3000) });
       if (res.ok) {
         const data: any = await res.json();
         fetchedPlain = data.plainLyrics || '';

@@ -41,9 +41,12 @@ export async function apiGetLyrics(trackId: string, title?: string, artist?: str
   ];
 }
 
-export async function apiGetRecommendations(trackId?: string): Promise<Track[]> {
+export async function apiGetRecommendations(trackId?: string, genre?: string): Promise<Track[]> {
   try {
-    const res = await fetch(`${API_BASE}/recommendations?trackId=${encodeURIComponent(trackId || '')}`);
+    const params = new URLSearchParams();
+    if (trackId) params.append('trackId', trackId);
+    if (genre) params.append('genre', genre);
+    const res = await fetch(`${API_BASE}/recommendations?${params.toString()}`);
     if (res.ok) {
       const data = await res.json();
       if (data.recommendations && Array.isArray(data.recommendations)) {

@@ -47,29 +47,63 @@ export async function fetchLyrics(trackTitle: string, artistName: string, trackI
   ];
 }
 
-export async function fetchTopTrendingHits(): Promise<Track[]> {
-  const backendRecs = await apiGetRecommendations();
+export async function fetchTopTrendingHits(preferredGenre?: string): Promise<Track[]> {
+  const backendRecs = await apiGetRecommendations(undefined, preferredGenre);
   if (backendRecs && backendRecs.length > 0) {
-    return backendRecs;
+    const seenCovers = new Set<string>();
+    const seenTitles = new Set<string>();
+    const artistCounts: Record<string, number> = {};
+    const filtered: Track[] = [];
+
+    for (const t of backendRecs) {
+      const cover = (t.coverUrl || '').trim();
+      const normTitle = (t.title || '').toLowerCase().trim();
+      const normArtist = (t.artist || '').toLowerCase().trim();
+
+      if (cover && seenCovers.has(cover)) continue;
+      if (normTitle && seenTitles.has(normTitle)) continue;
+      if (normArtist && (artistCounts[normArtist] || 0) >= 2) continue;
+
+      if (cover) seenCovers.add(cover);
+      if (normTitle) seenTitles.add(normTitle);
+      if (normArtist) artistCounts[normArtist] = (artistCounts[normArtist] || 0) + 1;
+      filtered.push(t);
+    }
+
+    if (filtered.length >= 4) {
+      return filtered;
+    }
   }
 
-  const topTamilQueries = [
+  const trendingQueries = [
     'God Mode Karuppu',
-    'Katchi Sera',
-    'Aasa Kooda',
-    'Naa Ready Leo',
-    'Hukum Jailer',
-    'Fear Song Devara',
-    'Whistle Podu GOAT',
-    'Google Google Thuppakki'
+    'Blinding Lights The Weeknd',
+    'Kesariya Brahmastra',
+    'Katchi Sera Sai Abhyankkar',
+    'Levitating Dua Lipa',
+    'Naa Ready Leo Vijay',
+    'Apna Bana Le Arijit Singh',
+    'Big Dawgs Hanumankind',
+    'Aasa Kooda Sai Abhyankkar',
+    'Hukum Jailer Anirudh'
   ];
   try {
-    const promises = topTamilQueries.map(q => searchOnlineTracks(q));
+    const promises = trendingQueries.map(q => searchOnlineTracks(q));
     const resultsArray = await Promise.all(promises);
-    const flattened = resultsArray.flat().filter((t, index, self) => 
-      index === self.findIndex(s => s.id === t.id || s.title.toLowerCase() === t.title.toLowerCase())
-    );
-    if (flattened.length > 0) return flattened;
+    const seenCovers = new Set<string>();
+    const seenTitles = new Set<string>();
+    const diverseFallback: Track[] = [];
+
+    for (const t of resultsArray.flat()) {
+      const cover = (t.coverUrl || '').trim();
+      const normTitle = (t.title || '').toLowerCase().trim();
+      if (cover && seenCovers.has(cover)) continue;
+      if (normTitle && seenTitles.has(normTitle)) continue;
+      if (cover) seenCovers.add(cover);
+      if (normTitle) seenTitles.add(normTitle);
+      diverseFallback.push(t);
+    }
+    if (diverseFallback.length > 0) return diverseFallback;
   } catch {
     // Fallback
   }
@@ -110,8 +144,8 @@ export async function searchOnlineTracks(query: string): Promise<Track[]> {
               durationSeconds: durSecs,
               coverUrl: cover600 || 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=600&q=80',
               genre: item.primaryGenreName || 'Tamil Hit',
-              audioUrl: item.previewUrl,
-              fallbackAudioUrl: `https://corsproxy.io/?${encodeURIComponent(item.previewUrl)}`,
+              audioUrl: `/api/stream/${item.trackName ? encodeURIComponent(cleanText(item.trackName) + ' ' + cleanText(item.artistName)) : `itunes-${item.trackId}`}`,
+              fallbackAudioUrl: item.previewUrl,
               releaseYear: item.releaseDate ? item.releaseDate.substring(0, 4) : '2025',
               plays: '3.2M',
               isLiked: false

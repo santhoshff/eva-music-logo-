@@ -69,7 +69,9 @@ class AudioEngine {
       this.howl = null;
     }
 
-    const streamUrl = audioUrl && audioUrl.startsWith('http') ? audioUrl : getBackendStreamUrl(trackId);
+    // Ensure full song stream is prioritized (filter out 30s iTunes preview links)
+    const is30sPreview = (url?: string) => !url || url.includes('AudioPreview') || url.includes('itunes.apple.com') || url.includes('/preview');
+    const streamUrl = audioUrl && audioUrl.startsWith('http') && !is30sPreview(audioUrl) ? audioUrl : getBackendStreamUrl(trackId);
     this.rawAudioUrl = streamUrl;
 
     this.howl = new Howl({
@@ -144,7 +146,9 @@ class AudioEngine {
       this.howl = null;
     }
 
-    const streamUrl = audioUrl && audioUrl.startsWith('http') ? audioUrl : getBackendStreamUrl(trackId);
+    // Ensure full song stream is prioritized (filter out 30s iTunes preview links)
+    const is30sPreview = (url?: string) => !url || url.includes('AudioPreview') || url.includes('itunes.apple.com') || url.includes('/preview');
+    const streamUrl = audioUrl && audioUrl.startsWith('http') && !is30sPreview(audioUrl) ? audioUrl : getBackendStreamUrl(trackId);
     this.rawAudioUrl = streamUrl;
 
     // Create fresh Howl instance for new track

@@ -2,7 +2,7 @@
 
 ## 🛡️ Supported Versions
 
-We issue security updates for the following versions of EVA AI Music:
+We issue security updates for the following versions of EVA Music:
 
 | Version | Supported |
 | ------- | --------- |
@@ -13,15 +13,15 @@ We issue security updates for the following versions of EVA AI Music:
 
 ## 🔒 Privacy & Data Policy
 
-EVA AI Music is designed with a **privacy-first** architecture:
-- **On-Device Recommendation Engine:** Echo Brain processes listening history and neural ranking locally. No personal listening telemetry is sold or transmitted to ad networks.
+EVA Music is designed with a **privacy-first** architecture:
+- **On-Device Recommendation Engine:** Eva Brain processes listening history and neural ranking locally. No personal listening telemetry is sold or transmitted to ad networks.
 - **Proxy Security:** Audio stream proxy routes strips identifying tracking tokens before forwarding stream requests.
 
 ---
 
 ## 🐛 Reporting a Vulnerability
 
-If you discover a security vulnerability within EVA AI Music, please report it privately:
+If you discover a security vulnerability within EVA Music, please report it privately:
 
 1. **Do NOT open a public GitHub issue.**
 2. Email security concerns to `security@evamusic.app` with detailed reproduction steps.

@@ -4,23 +4,20 @@ import { GenreCategory, Track } from '../types';
 import { searchOnlineTracks } from '../services/musicApi';
 
 interface DiscoverScreenProps {
-  categories: GenreCategory[];
+  categories?: GenreCategory[];
   tracks: Track[];
   onPlayTrack: (track: Track) => void;
-  onSelectCategory: (cat: GenreCategory) => void;
+  onSelectCategory?: (cat: GenreCategory) => void;
 }
 
 export const DiscoverScreen: React.FC<DiscoverScreenProps> = ({
-  categories,
   tracks,
   onPlayTrack,
-  onSelectCategory,
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [onlineResults, setOnlineResults] = useState<Track[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [isSpinning, setIsSpinning] = useState(false);
-  const [selectedGenreFilter, setSelectedGenreFilter] = useState('All');
 
   useEffect(() => {
     if (!searchQuery.trim()) {
@@ -52,13 +49,6 @@ export const DiscoverScreen: React.FC<DiscoverScreenProps> = ({
       }
     }, 600);
   };
-
-  const genreFilters = ['All', 'Tamil', 'Pop', 'Bollywood', 'Lo-Fi', 'South'];
-
-  const filteredCategories = categories.filter(cat => {
-    if (selectedGenreFilter === 'All') return true;
-    return cat.name.toLowerCase().includes(selectedGenreFilter.toLowerCase());
-  });
 
   const localFiltered = tracks.filter(t => 
     t.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -165,79 +155,7 @@ export const DiscoverScreen: React.FC<DiscoverScreenProps> = ({
             </div>
           </div>
 
-          {/* Interactive Genre Filter Bar */}
-          <div>
-            <div className="flex items-center justify-between mb-3">
-              <h2 className="text-xl font-extrabold text-slate-900 tracking-tight">
-                Explore Soundscapes
-              </h2>
-            </div>
 
-            <div className="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar mb-3">
-              {genreFilters.map((gf) => {
-                const isSelected = selectedGenreFilter === gf;
-                return (
-                  <button
-                    key={gf}
-                    onClick={() => setSelectedGenreFilter(gf)}
-                    className={`py-2 px-3.5 rounded-full text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
-                      isSelected
-                        ? 'bg-purple-600 text-white shadow-md shadow-purple-200'
-                        : 'bg-white/70 text-slate-700 hover:bg-white border border-white/80 backdrop-blur-md'
-                    }`}
-                  >
-                    {gf === 'All' ? '🔥 All Genres' : gf}
-                  </button>
-                );
-              })}
-            </div>
-
-            {/* Interactive Soundscape Grid */}
-            <div className="grid grid-cols-2 gap-3.5">
-              {filteredCategories.map((cat, index) => {
-                const defaultGradients = [
-                  'from-purple-600 via-indigo-700 to-slate-950',
-                  'from-rose-600 via-red-700 to-amber-950',
-                  'from-teal-500 via-emerald-700 to-slate-950',
-                  'from-pink-600 via-rose-700 to-purple-950',
-                  'from-blue-600 via-indigo-800 to-slate-950',
-                ];
-                const gradient = cat.color?.includes('from-')
-                  ? cat.color
-                  : defaultGradients[index % defaultGradients.length];
-
-                return (
-                  <div
-                    key={cat.id}
-                    onClick={() => onSelectCategory(cat)}
-                    className={`relative rounded-3xl overflow-hidden shadow-lg group cursor-pointer border border-white/20 bg-gradient-to-br ${gradient} p-4 flex flex-col justify-between transition-all duration-300 hover:scale-[1.02] active:scale-95 ${
-                      index === 4 && filteredCategories.length % 2 !== 0 ? 'col-span-2 h-36' : 'h-40'
-                    }`}
-                  >
-                    {/* Top Badge & Play Action */}
-                    <div className="relative z-10 flex items-center justify-between">
-                      <span className="text-[10px] font-extrabold uppercase tracking-widest text-white/90 bg-white/15 backdrop-blur-md px-2.5 py-1 rounded-full border border-white/10">
-                        {cat.trackCount ? `${cat.trackCount} Tracks` : 'Curated'}
-                      </span>
-                      <div className="w-8 h-8 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center text-white group-hover:bg-white group-hover:text-slate-900 transition-colors shadow-xs">
-                        <Play size={13} className="fill-current ml-0.5" />
-                      </div>
-                    </div>
-
-                    {/* Text Content */}
-                    <div className="relative z-10 space-y-0.5">
-                      <p className="text-[11px] font-semibold text-white/80 line-clamp-1">
-                        {cat.subtitle}
-                      </p>
-                      <h3 className="text-base font-black text-white leading-tight tracking-tight">
-                        {cat.name}
-                      </h3>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
         </>
       )}
     </div>

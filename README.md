@@ -1,5 +1,5 @@
 <div align="center">
-  <h1>✨ EVA AI Music</h1>
+  <h1>✨ EVA Music</h1>
   <p><strong>A Next-Generation Ad-Free AI Music Streaming Web Application & Intelligence Engine</strong></p>
 
   [![Version](https://img.shields.io/badge/version-1.0.0-purple.svg?style=for-the-badge)](RELEASE_INFO.md)
@@ -12,7 +12,7 @@
 
 ## 🎵 Overview
 
-**EVA AI Music** is a state-of-the-art web application designed for high-fidelity, ad-free music streaming powered by **Echo Brain**, an on-device contextual AI recommendation engine. EVA combines a modern Gen Z dark-mode UI, glassmorphism design tokens, real-time synchronized lyrics, user stats tracking, and a robust Fastify backend proxy for seamless audio playback.
+**EVA Music** is a state-of-the-art web application designed for high-fidelity, ad-free music streaming powered by **Eva Brain**, an on-device contextual AI recommendation engine. EVA combines a modern Gen Z dark-mode UI, glassmorphism design tokens, real-time synchronized lyrics, user stats tracking, and a robust Fastify backend proxy for seamless audio playback.
 
 ---
 
@@ -23,7 +23,7 @@
 - **HTML5 Web Audio Engine:** Centralized [audioEngine.ts](file:///d:/all/ai%20agent/eva%20music/eva-music-app/src/services/audioEngine.ts) supporting play queueing, volume binding, muting, seeking, and equalizer presets.
 - **Race Condition Protection:** Internal sequence counter (`_currentRequestId`) discards stale async responses during rapid track changes.
 
-### 🧠 Echo Brain AI Recommendation Engine
+### 🧠 Eva Brain AI Recommendation Engine
 - **On-Device Neural Persona:** Analyzes listening momentum without sending private user data to third-party tracking servers.
 - **Three Pillars Aggregation:** Merges candidate tracks from **Anchor** (current track sonic match), **Momentum** (previous track bridge), and **Vault** (all-time top favorites).
 - **"Why this song?" Transparency:** Queue items feature a `✨ AI` badge with transparent explanations for why each track was injected.
@@ -48,7 +48,7 @@ eva music/
 ├── eva-music-app/             # React 19 Frontend Web Client
 │   ├── src/
 │   │   ├── components/        # UI Components (HomeScreen, DiscoverScreen, Player Modals)
-│   │   ├── services/          # audioEngine.ts, echoBrainService.ts, backendApi.ts
+│   │   ├── services/          # audioEngine.ts, evaBrainService.ts, backendApi.ts
 │   │   ├── data/              # Initial music data & category definitions
 │   │   ├── types.ts           # Shared TypeScript interfaces
 │   │   └── App.tsx            # Root application state & navigation router
@@ -102,7 +102,6 @@ Open **[http://localhost:3000/](http://localhost:3000/)** in your browser.
 ## 📖 Documentation Index
 
 - 🛠️ **[SETUP.md](SETUP.md)** — Comprehensive installation and environment configuration guide.
-- 🧠 **[ECHO_BRAIN_DOCS.md](ECHO_BRAIN_DOCS.md)** — Architectural breakdown of the Echo Brain AI engine.
 - 🤝 **[CONTRIBUTING.md](CONTRIBUTING.md)** — Guidelines for code style, PRs, and issues.
 - 📜 **[CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md)** — Community guidelines and standards.
 - 🔒 **[SECURITY.md](SECURITY.md)** — Security policies and vulnerability disclosure.

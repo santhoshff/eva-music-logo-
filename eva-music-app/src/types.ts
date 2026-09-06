@@ -13,6 +13,10 @@ export interface Track {
   releaseYear?: string;
   plays?: string;
   lyrics?: string[];
+  isEvaBrain?: boolean;
+  evaBrainReason?: string;
+  isEchoBrain?: boolean;
+  echoBrainReason?: string;
 }
 
 export interface Playlist {

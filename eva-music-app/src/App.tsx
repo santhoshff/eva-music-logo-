@@ -16,6 +16,7 @@ import { SongInstallModal } from './components/SongInstallModal';
 import { INITIAL_TRACKS, FEATURED_PLAYLISTS, POPULAR_ARTISTS, GENRE_CATEGORIES, getRandomizedTracks } from './data/musicData';
 import { audioEngine } from './services/audioEngine';
 import { fetchTopTrendingHits } from './services/musicApi';
+import { evaBrainService } from './services/evaBrainService';
 import { syncUserProfileToSupabase, syncLikedSongToSupabase } from './services/supabaseClient';
 import { apiToggleFavorite } from './services/backendApi';
 import { NavTab, Track, Artist, Playlist, GenreCategory, UserProfile } from './types';
@@ -102,8 +103,9 @@ export default function App() {
     const initialTrack = tracks[0] || INITIAL_TRACKS[0];
     audioEngine.loadTrack(initialTrack.id, initialTrack.audioUrl, initialTrack.durationSeconds);
 
-    // Fetch live top trending hit songs
-    fetchTopTrendingHits().then(liveHits => {
+    // Fetch live top trending hit songs tailored to user taste
+    const primaryGenre = userProfile.stats.topGenres[0]?.genre;
+    fetchTopTrendingHits(primaryGenre).then(liveHits => {
       if (liveHits && liveHits.length > 0) {
         setTracks(prev => {
           const merged = [...liveHits, ...prev];
@@ -160,6 +162,7 @@ export default function App() {
           const nextLiked = !t.isLiked;
           syncLikedSongToSupabase(t, nextLiked);
           apiToggleFavorite(t, nextLiked);
+          evaBrainService.recordLike(t, nextLiked);
           return { ...t, isLiked: nextLiked };
         }
         return t;
@@ -346,6 +349,8 @@ export default function App() {
           onClose={() => setSelectedArtist(null)}
           onPlayTrack={handlePlayTrack}
           onToggleFollow={handleToggleFollowArtist}
+          currentTrackId={currentTrackId}
+          isPlaying={playerState.isPlaying}
         />
 
         {/* Playlist / Genre Detail Modal */}
