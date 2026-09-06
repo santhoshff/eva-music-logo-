@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { MoreVertical, SlidersHorizontal, Heart, Play, Music, ListMusic } from 'lucide-react';
+import { MoreVertical, SlidersHorizontal, Heart } from 'lucide-react';
 import { Track } from '../types';
 
 interface LibraryScreenProps {
@@ -18,62 +18,35 @@ export const LibraryScreen: React.FC<LibraryScreenProps> = ({
   onPlayTrack,
   onToggleLike,
 }) => {
-  const [selectedSubCategory, setSelectedSubCategory] = useState<'Liked' | 'Playlists'>('Liked');
-  const [sortOrder, setSortOrder] = useState<'Recently Added' | 'Title A-Z' | 'Most Liked'>('Recently Added');
+  const [sortOrder, setSortOrder] = useState<'Recently Added' | 'Title A-Z'>('Recently Added');
 
   const cycleSortOrder = () => {
-    if (sortOrder === 'Recently Added') setSortOrder('Title A-Z');
-    else if (sortOrder === 'Title A-Z') setSortOrder('Most Liked');
-    else setSortOrder('Recently Added');
+    setSortOrder((prev) => (prev === 'Recently Added' ? 'Title A-Z' : 'Recently Added'));
   };
 
-  // Filter based on subcategory
-  let filteredTracks = [...tracks];
-  if (selectedSubCategory === 'Liked') {
-    filteredTracks = tracks.filter(t => t.isLiked);
-  }
+  // Strictly filter only songs that the active user has liked
+  const likedTracks = tracks.filter((t) => t.isLiked);
 
-  const sortedTracks = filteredTracks.sort((a, b) => {
+  const sortedTracks = [...likedTracks].sort((a, b) => {
     if (sortOrder === 'Title A-Z') {
       return a.title.localeCompare(b.title);
-    } else if (sortOrder === 'Most Liked') {
-      return (b.isLiked ? 1 : 0) - (a.isLiked ? 1 : 0);
     }
     return 0;
   });
 
   return (
     <div className="flex flex-col gap-5 pb-36 w-full max-w-md mx-auto px-6">
-      {/* Subcategory Filter Pills: Liked, Playlists */}
-      <div className="flex items-center gap-2 pt-2">
-        {(['Liked', 'Playlists'] as const).map((category) => {
-          const isSelected = selectedSubCategory === category;
-          return (
-            <button
-              key={category}
-              onClick={() => setSelectedSubCategory(category)}
-              className={`flex-1 py-2.5 rounded-full text-xs font-bold transition-all duration-200 cursor-pointer ${
-                isSelected
-                  ? 'bg-gradient-to-r from-purple-600 via-indigo-600 to-pink-600 text-white shadow-md shadow-purple-200/50 scale-102'
-                  : 'bg-white/70 hover:bg-white text-slate-700 border border-white/80 shadow-2xs backdrop-blur-md'
-              }`}
-            >
-              {category === 'Liked' && '❤️ '}
-              {category === 'Playlists' && '💿 '}
-              {category}
-            </button>
-          );
-        })}
-      </div>
-
       {/* Library Title & Sort Row */}
-      <div className="flex items-end justify-between pt-1">
+      <div className="flex items-end justify-between pt-2">
         <div>
-          <h2 className="text-2xl font-extrabold text-slate-900 tracking-tight">
-            {selectedSubCategory === 'Liked' ? 'Liked Songs' : 'Your Playlists'}
-          </h2>
-          <p className="text-xs font-semibold text-slate-500 mt-0.5">
-            {sortedTracks.length} {sortedTracks.length === 1 ? 'track' : 'tracks'} available
+          <div className="flex items-center gap-2">
+            <span className="p-1.5 rounded-xl bg-pink-100 text-pink-600 flex items-center justify-center">
+              <Heart size={16} className="fill-pink-500 text-pink-500" />
+            </span>
+            <h2 className="text-2xl font-extrabold text-slate-900 tracking-tight">Liked Songs</h2>
+          </div>
+          <p className="text-xs font-semibold text-slate-500 mt-1">
+            {sortedTracks.length} {sortedTracks.length === 1 ? 'track' : 'tracks'} in your collection
           </p>
         </div>
 
@@ -89,17 +62,12 @@ export const LibraryScreen: React.FC<LibraryScreenProps> = ({
       {/* Track List Container Card */}
       {sortedTracks.length === 0 ? (
         <div className="rounded-3xl p-8 bg-white/70 backdrop-blur-2xl border border-white/90 text-center space-y-3 shadow-md">
-          <div className="w-12 h-12 rounded-2xl bg-purple-100 text-purple-600 flex items-center justify-center mx-auto">
-            {selectedSubCategory === 'Liked' && <Heart size={24} className="text-pink-500" />}
-            {selectedSubCategory === 'Playlists' && <ListMusic size={24} className="text-purple-600" />}
+          <div className="w-12 h-12 rounded-2xl bg-pink-50 text-pink-500 flex items-center justify-center mx-auto">
+            <Heart size={24} className="fill-pink-500" />
           </div>
-          <h4 className="text-sm font-bold text-slate-800">
-            {selectedSubCategory === 'Liked' && 'No liked songs yet'}
-            {selectedSubCategory === 'Playlists' && 'No playlists available'}
-          </h4>
-          <p className="text-xs text-slate-400">
-            {selectedSubCategory === 'Liked' && 'Tap the heart icon on any song to add it here.'}
-            {selectedSubCategory === 'Playlists' && 'Your curated collections and playlists will show up here.'}
+          <h4 className="text-sm font-bold text-slate-800">No liked songs yet</h4>
+          <p className="text-xs text-slate-400 max-w-xs mx-auto">
+            Tap the heart icon on any song across EVA Music to add it to your personal library.
           </p>
         </div>
       ) : (

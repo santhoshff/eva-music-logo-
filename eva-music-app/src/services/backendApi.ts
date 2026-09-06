@@ -1,5 +1,6 @@
 /// <reference types="vite/client" />
 import { Track } from '../types';
+import { getAuthHeaders } from './supabaseClient';
 
 const API_BASE = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8080/api';
 
@@ -23,11 +24,18 @@ export async function apiSearch(query: string, type: string = 'song'): Promise<T
 
 export async function apiGetLyrics(trackId: string, title?: string, artist?: string): Promise<string[]> {
   try {
-    const res = await fetch(`${API_BASE}/lyrics/${encodeURIComponent(trackId)}?title=${encodeURIComponent(title || '')}&artist=${encodeURIComponent(artist || '')}`);
+    const query = new URLSearchParams();
+    if (title) query.append('title', title);
+    if (artist) query.append('artist', artist);
+
+    const res = await fetch(`${API_BASE}/lyrics/${encodeURIComponent(trackId)}?${query.toString()}`);
     if (res.ok) {
       const data = await res.json();
       if (data.lines && Array.isArray(data.lines)) {
         return data.lines;
+      }
+      if (data.plainLyrics) {
+        return data.plainLyrics.split('\n');
       }
     }
   } catch (err) {
@@ -58,14 +66,15 @@ export async function apiGetRecommendations(trackId?: string, genre?: string): P
   }
   return [];
 }
+export const apiGetSongRecommendations = apiGetRecommendations;
 
 export async function apiGetShareLink(trackId: string, title?: string, artist?: string): Promise<string> {
   try {
     const res = await fetch(`${API_BASE}/share/${encodeURIComponent(trackId)}?title=${encodeURIComponent(title || '')}&artist=${encodeURIComponent(artist || '')}`);
     if (res.ok) {
       const data = await res.json();
-      if (data.songLinkUrl) {
-        return data.songLinkUrl;
+      if (data.songLinkUrl || data.shareUrl) {
+        return data.songLinkUrl || data.shareUrl;
       }
     }
   } catch (err) {
@@ -73,13 +82,15 @@ export async function apiGetShareLink(trackId: string, title?: string, artist?: 
   }
   return `https://song.link/i/${trackId}`;
 }
+export const apiCreateShareLink = apiGetShareLink;
 
 export async function apiToggleFavorite(track: Track, isLiked: boolean): Promise<boolean> {
   try {
+    const headers = await getAuthHeaders();
     if (isLiked) {
       const res = await fetch(`${API_BASE}/library/favorites`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({
           trackId: track.id,
           title: track.title,
@@ -92,6 +103,7 @@ export async function apiToggleFavorite(track: Track, isLiked: boolean): Promise
     } else {
       const res = await fetch(`${API_BASE}/library/favorites/${encodeURIComponent(track.id)}`, {
         method: 'DELETE',
+        headers,
       });
       return res.ok;
     }

@@ -69,7 +69,7 @@ export const SongInstallModal: React.FC<SongInstallModalProps> = ({
         duration: '3:30',
         durationSeconds: 210,
         genre: 'Installed Local Audio',
-        isLiked: true,
+        isLiked: false,
         coverUrl: randomCover,
         audioUrl: objectUrl,
         fallbackAudioUrl: objectUrl,

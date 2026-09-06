@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Search, Radio, Music, Play, Disc, Sparkles, Loader2, Dices, Flame, Zap, Heart } from 'lucide-react';
 import { GenreCategory, Track } from '../types';
 import { searchOnlineTracks } from '../services/musicApi';
+import { SmoothInput } from './SmoothInput';
 
 interface DiscoverScreenProps {
   categories?: GenreCategory[];
@@ -60,27 +61,25 @@ export const DiscoverScreen: React.FC<DiscoverScreenProps> = ({
 
   return (
     <div className="flex flex-col gap-6 pb-36 w-full max-w-md mx-auto px-6">
-      {/* Search Input Bar */}
-      <div className="relative">
-        <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none text-slate-400">
-          <Search size={18} />
-        </div>
-        <input
-          type="text"
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          placeholder="Search songs, artists, or lyrics..."
-          className="w-full pl-11 pr-4 py-3.5 rounded-full bg-white/70 backdrop-blur-xl border border-white/90 shadow-2xs text-slate-900 placeholder:text-slate-400 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-purple-400 focus:bg-white transition-all"
-        />
-        {searchQuery && (
-          <button
-            onClick={() => setSearchQuery('')}
-            className="absolute inset-y-0 right-4 flex items-center text-xs font-semibold text-slate-400 hover:text-slate-600 cursor-pointer"
-          >
-            Clear
-          </button>
-        )}
-      </div>
+      {/* Search Input Bar with Smooth Spring Caret */}
+      <SmoothInput
+        type="search"
+        value={searchQuery}
+        onChange={(e) => setSearchQuery(e.target.value)}
+        placeholder="Search songs, artists, or lyrics..."
+        icon={<Search size={18} className="text-slate-400" />}
+        rightElement={
+          searchQuery ? (
+            <button
+              onClick={() => setSearchQuery('')}
+              className="text-xs font-semibold text-purple-600 hover:text-purple-800 cursor-pointer px-2 py-1 rounded-full hover:bg-purple-50 transition-colors"
+            >
+              Clear
+            </button>
+          ) : null
+        }
+        wrapperClassName="rounded-full py-3 px-4 bg-white/80 backdrop-blur-xl border border-white/90 shadow-2xs focus-within:ring-4 focus-within:ring-purple-400/20"
+      />
 
       {/* Search Results overlay if searching */}
       {searchQuery ? (
