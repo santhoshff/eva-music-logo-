@@ -97,6 +97,17 @@ class AudioEngine {
     this.audio.addEventListener('error', (e) => {
       console.warn(`[AudioEngine] Audio error for track ${this.currentTrackId}:`, this.audio?.error || e);
       
+      // If direct CDN stream failed (e.g. timeout, CDN restriction), fail over to serverless stream proxy
+      if (this.rawAudioUrl && this.rawAudioUrl.includes('saavncdn.com') && !this.rawAudioUrl.includes('/api/stream')) {
+        const proxyUrl = `/api/stream?url=${encodeURIComponent(this.rawAudioUrl)}`;
+        console.log(`[AudioEngine] Direct CDN stream error. Switching to serverless stream proxy:`, proxyUrl);
+        if (this.audio && !this.audio.src.includes('/api/stream')) {
+          this.audio.src = proxyUrl;
+          this.audio.play().catch(err => console.warn('[AudioEngine] Proxy playback failed:', err.message));
+          return;
+        }
+      }
+
       // Attempt secondary fallback stream before concluding failure
       if (this.currentFallbackUrl && this.audio && this.audio.src !== this.currentFallbackUrl) {
         const fallback = this.currentFallbackUrl;
@@ -111,7 +122,6 @@ class AudioEngine {
       this.isPlaying = false;
       this.hasPlaybackError = true;
       this.notify();
-      // NOTE: We do NOT auto-skip to the next song on error to prevent infinite cycling
     });
   }
 
@@ -159,7 +169,7 @@ class AudioEngine {
     if (!this.audio) return;
 
     let streamUrl = (audioUrl && audioUrl.trim().length > 0) ? audioUrl.trim() : '';
-    
+
     // Check if running on a deployed host (not local localhost)
     const isDeployedClient = typeof window !== 'undefined' && 
       window.location.hostname !== 'localhost' && 
@@ -170,56 +180,42 @@ class AudioEngine {
       streamUrl = fallbackAudioUrl.trim();
     }
 
-    if (!streamUrl && trackId) {
-      if (fallbackAudioUrl && fallbackAudioUrl.startsWith('http')) {
-        streamUrl = fallbackAudioUrl.trim();
-      } else {
-        streamUrl = `/api/stream/${encodeURIComponent(trackId)}`;
-      }
-    }
+    // Never play 30s Apple/iTunes previews: Resolve full 320kbps track first!
+    const isPreviewOrEmpty = !streamUrl || 
+      streamUrl.includes('apple.com') || 
+      streamUrl.includes('mzstatic') || 
+      streamUrl.includes('itunes') || 
+      streamUrl.includes('preview');
 
-    if (streamUrl.startsWith('/api/')) {
-      const backendBase = import.meta.env.VITE_BACKEND_URL || '';
-      if (backendBase) {
-        streamUrl = `${backendBase.replace(/\/api\/?$/, '')}${streamUrl}`;
-      }
-    }
-
-    this.rawAudioUrl = streamUrl;
-
-    if (!streamUrl) {
-      console.warn(`[AudioEngine] No audio URL provided for track ${trackId}`);
-      this.isLoading = false;
-      this.notify();
+    if (isPreviewOrEmpty) {
+      const query = (trackTitle || trackId).replace(/\(From.*?\)/gi, '').trim();
+      fetch(`/api/search?q=${encodeURIComponent(query)}`)
+        .then(r => r.json())
+        .then(data => {
+          if (requestId !== this.currentRequestId || !this.audio) return;
+          const fullMatch = data.results?.find((r: any) => r.audioUrl && r.audioUrl.includes('saavncdn.com'));
+          if (fullMatch && fullMatch.audioUrl) {
+            console.log(`[AudioEngine] Resolved full-length 320kbps track for ${trackId}:`, fullMatch.audioUrl);
+            this.playDirectStream(fullMatch.audioUrl, fullMatch.durationSeconds || 240, requestId, trackId);
+          } else if (streamUrl) {
+            this.playDirectStream(streamUrl, durationSeconds, requestId, trackId);
+          }
+        })
+        .catch(() => {
+          if (streamUrl) {
+            this.playDirectStream(streamUrl, durationSeconds, requestId, trackId);
+          }
+        });
       return;
     }
 
-    // Auto-upgrade: If track URL is an Apple 30s preview clip, asynchronously upgrade to full 320kbps
-    if (streamUrl.includes('apple.com') || streamUrl.includes('mzstatic') || streamUrl.includes('itunes')) {
-      const query = (trackTitle || trackId).replace(/\(From.*?\)/gi, '').trim();
-      if (query) {
-        fetch(`/api/search?q=${encodeURIComponent(query)}`)
-          .then(r => r.json())
-          .then(data => {
-            if (requestId !== this.currentRequestId || !this.audio) return;
-            const fullMatch = data.results?.find((r: any) => r.audioUrl && r.audioUrl.includes('saavncdn.com'));
-            if (fullMatch && fullMatch.audioUrl) {
-              console.log(`[AudioEngine] Upgraded 30s preview to full-length 320kbps track for ${trackId}:`, fullMatch.audioUrl);
-              const wasPlaying = this.isPlaying;
-              const curTime = this.audio.currentTime;
-              this.audio.src = fullMatch.audioUrl;
-              this.rawAudioUrl = fullMatch.audioUrl;
-              this.duration = fullMatch.durationSeconds || 240;
-              this.audio.currentTime = curTime;
-              if (wasPlaying) {
-                this.audio.play().catch(() => {});
-              }
-              this.notify();
-            }
-          })
-          .catch(() => {});
-      }
-    }
+    this.playDirectStream(streamUrl, durationSeconds, requestId, trackId);
+  }
+
+  private playDirectStream(streamUrl: string, durationSecs: number, requestId: number, trackId: string) {
+    if (!this.audio || requestId !== this.currentRequestId) return;
+    this.rawAudioUrl = streamUrl;
+    this.duration = durationSecs > 0 ? durationSecs : 218;
 
     console.log(`[AudioEngine] Playing authentic track #${requestId} [${trackId}]: ${streamUrl}`);
 
@@ -243,7 +239,6 @@ class AudioEngine {
             })
             .catch(err => {
               if (requestId !== this.currentRequestId) return;
-              // If interrupted by browser media pipeline loading, retry automatically on canplay
               if (err.name === 'AbortError' || err.name === 'NotSupportedError') {
                 const onCanPlay = () => {
                   if (requestId === this.currentRequestId && this.audio) {
@@ -259,7 +254,6 @@ class AudioEngine {
               }
 
               console.warn(`[AudioEngine] Autoplay prevented:`, err.message);
-              // Wait for user interaction to resume if strict browser policy blocks
               const resumeOnTouch = () => {
                 if (this.audio && this.currentTrackId === trackId) {
                   this.audio.play().then(() => {

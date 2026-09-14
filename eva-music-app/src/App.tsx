@@ -186,11 +186,30 @@ export default function App() {
         if (rawInstalled) userInstalled = JSON.parse(rawInstalled);
       } catch {}
 
+      const ensureFullLengthTracks = (trackList: Track[]): Track[] => {
+        return trackList.map(t => {
+          const master = INITIAL_TRACKS.find(m => m.id === t.id);
+          if (master) {
+            return {
+              ...t,
+              audioUrl: master.audioUrl,
+              fallbackAudioUrl: master.fallbackAudioUrl || master.audioUrl,
+              duration: master.duration,
+              durationSeconds: master.durationSeconds,
+            };
+          }
+          if (t.audioUrl && (t.audioUrl.includes('apple.com') || t.audioUrl.includes('itunes') || t.audioUrl.includes('mzstatic'))) {
+            return { ...t, audioUrl: '', fallbackAudioUrl: '' };
+          }
+          return t;
+        });
+      };
+
       // If cached data exists for this user, apply it immediately
       if (cachedLikedIds !== null) {
         const currentLikedIds = cachedLikedIds;
         setTracks((prev) => {
-          const merged = [...cachedLikedTracks, ...userInstalled, ...prev];
+          const merged = ensureFullLengthTracks([...cachedLikedTracks, ...userInstalled, ...prev]);
           const unique = merged.filter((t, idx, self) => idx === self.findIndex((s) => s.id === t.id));
           return unique.map((t) => ({
             ...t,
@@ -200,7 +219,7 @@ export default function App() {
       } else {
         // New account with no prior history: clean slate (0 liked songs)
         setTracks((prev) => {
-          const merged = [...userInstalled, ...prev];
+          const merged = ensureFullLengthTracks([...userInstalled, ...prev]);
           const unique = merged.filter((t, idx, self) => idx === self.findIndex((s) => s.id === t.id));
           return unique.map((t) => ({
             ...t,
@@ -218,8 +237,8 @@ export default function App() {
           
           // Merge rich track metadata
           const trackMap = new Map<string, Track>();
-          cachedLikedTracks.forEach((t) => trackMap.set(t.id, t));
-          cloudTracks.forEach((t) => trackMap.set(t.id, t));
+          ensureFullLengthTracks(cachedLikedTracks).forEach((t) => trackMap.set(t.id, t));
+          ensureFullLengthTracks(cloudTracks).forEach((t) => trackMap.set(t.id, t));
           const finalLikedTracks = Array.from(trackMap.values());
 
           // Write back to both keys in localStorage
@@ -234,7 +253,7 @@ export default function App() {
 
           // Update React state
           setTracks((prev) => {
-            const merged = [...finalLikedTracks, ...userInstalled, ...prev];
+            const merged = ensureFullLengthTracks([...finalLikedTracks, ...userInstalled, ...prev]);
             const unique = merged.filter((t, idx, self) => idx === self.findIndex((s) => s.id === t.id));
             return unique.map((t) => ({
               ...t,

@@ -147,8 +147,9 @@ export async function searchOnlineTracks(query: string): Promise<Track[]> {
           return stNorm === itemNorm || (stNorm.length > 5 && itemNorm.includes(stNorm));
         });
 
-        const audioUrl = matchingStatic?.audioUrl || item.previewUrl || '';
-        const fallbackAudioUrl = matchingStatic?.fallbackAudioUrl || item.previewUrl || audioUrl;
+        // Never use 30s previewUrl: Use full static stream or empty string to trigger full 320kbps on-demand resolution
+        const audioUrl = matchingStatic?.audioUrl || '';
+        const fallbackAudioUrl = matchingStatic?.fallbackAudioUrl || audioUrl;
 
         itunesResults.push({
           id: trackId,
