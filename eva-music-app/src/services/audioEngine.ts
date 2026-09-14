@@ -87,15 +87,6 @@ class AudioEngine {
       if (this.audio && !Number.isNaN(this.audio.currentTime)) {
         this.currentTime = this.audio.currentTime;
         this.notify();
-
-        // Safety trigger if track reached end but browser delayed ended event
-        if (
-          !this.isEndedHandled &&
-          this.audio.duration > 0 &&
-          this.audio.currentTime >= this.audio.duration - 0.25
-        ) {
-          this.handleTrackEnded();
-        }
       }
     });
 
@@ -150,7 +141,9 @@ class AudioEngine {
     audioUrl?: string,
     durationSeconds: number = 218,
     fallbackAudioUrl?: string,
-    _genre?: string
+    _genre?: string,
+    trackTitle?: string,
+    trackArtist?: string
   ) {
     const requestId = ++this.currentRequestId;
     this.currentTrackId = trackId;
@@ -199,6 +192,33 @@ class AudioEngine {
       this.isLoading = false;
       this.notify();
       return;
+    }
+
+    // Auto-upgrade: If track URL is an Apple 30s preview clip, asynchronously upgrade to full 320kbps
+    if (streamUrl.includes('apple.com') || streamUrl.includes('mzstatic') || streamUrl.includes('itunes')) {
+      const query = (trackTitle || trackId).replace(/\(From.*?\)/gi, '').trim();
+      if (query) {
+        fetch(`/api/search?q=${encodeURIComponent(query)}`)
+          .then(r => r.json())
+          .then(data => {
+            if (requestId !== this.currentRequestId || !this.audio) return;
+            const fullMatch = data.results?.find((r: any) => r.audioUrl && r.audioUrl.includes('saavncdn.com'));
+            if (fullMatch && fullMatch.audioUrl) {
+              console.log(`[AudioEngine] Upgraded 30s preview to full-length 320kbps track for ${trackId}:`, fullMatch.audioUrl);
+              const wasPlaying = this.isPlaying;
+              const curTime = this.audio.currentTime;
+              this.audio.src = fullMatch.audioUrl;
+              this.rawAudioUrl = fullMatch.audioUrl;
+              this.duration = fullMatch.durationSeconds || 240;
+              this.audio.currentTime = curTime;
+              if (wasPlaying) {
+                this.audio.play().catch(() => {});
+              }
+              this.notify();
+            }
+          })
+          .catch(() => {});
+      }
     }
 
     console.log(`[AudioEngine] Playing authentic track #${requestId} [${trackId}]: ${streamUrl}`);

@@ -171,59 +171,63 @@ export async function searchOnlineTracks(query: string): Promise<Track[]> {
     console.warn('[MusicAPI] iTunes online search notice:', err);
   }
 
-  // 4. Try Vite dev-proxy Saavn search if running locally
+  // 4. Try Saavn full-length 320kbps search (supported in dev via Vite proxy and production via Vercel rewrites)
   let saavnResults: Track[] = [];
   try {
-    const isLocalhost = typeof window !== 'undefined' && 
-      (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+    const saavnUrl = `/saavn-api/api.php?__call=search.getResults&_format=json&cc=in&_marker=0&q=${encodeURIComponent(cleanQ)}`;
+    const res = await fetch(saavnUrl, { signal: AbortSignal.timeout(5000) });
+    if (res.ok) {
+      const text = await res.text();
+      const jsonStart = text.indexOf('{');
+      if (jsonStart !== -1) {
+        const data = JSON.parse(text.substring(jsonStart));
+        const results = data.results || [];
+        for (const s of results) {
+          const sTitle = cleanText(s.song || s.title || '');
+          if (!s.encrypted_media_url || isDummyOrBgmTrack(sTitle, cleanQ)) continue;
 
-    if (isLocalhost) {
-      const saavnUrl = `/saavn-api/api.php?__call=search.getResults&_format=json&cc=in&_marker=0&q=${encodeURIComponent(cleanQ)}`;
-      const res = await fetch(saavnUrl, { signal: AbortSignal.timeout(4000) });
-      if (res.ok) {
-        const text = await res.text();
-        if (text.startsWith('{')) {
-          const data = JSON.parse(text);
-          const results = data.results || [];
-          for (const s of results) {
-            const sTitle = cleanText(s.song || s.title || '');
-            if (!s.encrypted_media_url || isDummyOrBgmTrack(sTitle, cleanQ)) continue;
+          const full320Url = decryptSaavnMediaUrl(s.encrypted_media_url);
+          if (!full320Url) continue;
 
-            const full320Url = decryptSaavnMediaUrl(s.encrypted_media_url);
-            if (!full320Url) continue;
+          const durSecs = s.duration ? parseInt(s.duration, 10) : 225;
+          const cover500 = (s.image || '')
+            .replace('50x50', '500x500')
+            .replace('150x150', '500x500') ||
+            'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=600&q=80';
 
-            const durSecs = s.duration ? parseInt(s.duration, 10) : 225;
-            const cover500 = (s.image || '')
-              .replace('50x50', '500x500')
-              .replace('150x150', '500x500') ||
-              'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=600&q=80';
-
-            saavnResults.push({
-              id: `saavn-${s.id}`,
-              title: sTitle,
-              artist: cleanText(s.primary_artists || s.singers || s.music || 'Artist'),
-              album: cleanText(s.album || 'Single'),
-              duration: formatTimeFromSeconds(durSecs),
-              durationSeconds: durSecs,
-              coverUrl: cover500,
-              genre: s.language ? s.language.charAt(0).toUpperCase() + s.language.slice(1) : 'Music',
-              audioUrl: full320Url,
-              fallbackAudioUrl: full320Url,
-              releaseYear: s.year || '2024',
-              plays: s.play_count ? `${(parseInt(s.play_count, 10) / 1000000).toFixed(1)}M` : '4.5M',
-              isLiked: false,
-            });
-          }
+          saavnResults.push({
+            id: `saavn-${s.id}`,
+            title: sTitle,
+            artist: cleanText(s.primary_artists || s.singers || s.music || 'Artist'),
+            album: cleanText(s.album || 'Single'),
+            duration: formatTimeFromSeconds(durSecs),
+            durationSeconds: durSecs,
+            coverUrl: cover500,
+            genre: s.language ? s.language.charAt(0).toUpperCase() + s.language.slice(1) : 'Music',
+            audioUrl: full320Url,
+            fallbackAudioUrl: full320Url,
+            releaseYear: s.year || '2024',
+            plays: s.play_count ? `${(parseInt(s.play_count, 10) / 1000000).toFixed(1)}M` : '4.5M',
+            isLiked: false,
+          });
         }
       }
     }
   } catch {
-    // Dev proxy inactive, safe to ignore
+    // Saavn proxy notice
   }
 
-  // Merge results prioritizing local catalog, then Saavn direct, then backend, then iTunes
-  const combined = mergeTrackLists(localMatches, saavnResults, backendResults, itunesResults);
-  return combined.length > 0 ? combined : localMatches;
+  // Merge results prioritizing FULL-LENGTH sources:
+  // 1. Local 320kbps catalog
+  // 2. Vercel / backend Saavn search API (/api/search)
+  // 3. Proxy Saavn direct stream (/saavn-api)
+  // 4. iTunes only as last fallback if no full song found
+  const fullSongSources = mergeTrackLists(localMatches, backendResults, saavnResults);
+  if (fullSongSources.length > 0) {
+    return fullSongSources;
+  }
+
+  return itunesResults;
 }
 
 function mergeTrackLists(...lists: Track[][]): Track[] {

@@ -1,6 +1,10 @@
 {
   "rewrites": [
     {
+      "source": "/saavn-api/:path*",
+      "destination": "https://www.jiosaavn.com/:path*"
+    },
+    {
       "source": "/((?!api|saavn-api).*)",
       "destination": "/index.html"
     }

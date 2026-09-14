@@ -352,8 +352,17 @@ export default function App() {
       }
       return prev;
     });
+
     setCurrentTrackId(track.id);
-    audioEngine.playTrack(track.id, track.audioUrl, track.durationSeconds, track.fallbackAudioUrl, track.genre);
+    audioEngine.playTrack(
+      track.id,
+      track.audioUrl,
+      track.durationSeconds,
+      track.fallbackAudioUrl,
+      track.genre,
+      track.title,
+      track.artist
+    );
     audioEngine.updateMediaSession(
       { title: track.title, artist: track.artist, album: track.genre, coverUrl: track.coverUrl },
       {
