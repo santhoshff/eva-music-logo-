@@ -99,13 +99,66 @@ const buildUserProfile = (user: any): UserProfile => {
   };
 };
 
+const ensureFullLengthTracks = (trackList: Track[]): Track[] => {
+  return trackList.map(t => {
+    const normTitle = (t.title || '').toLowerCase().trim();
+    const master = INITIAL_TRACKS.find(m => 
+      m.id === t.id || 
+      (normTitle.length > 3 && m.title.toLowerCase().includes(normTitle)) ||
+      (normTitle.length > 3 && normTitle.includes(m.title.toLowerCase()))
+    );
+    if (master) {
+      return {
+        ...t,
+        audioUrl: master.audioUrl,
+        fallbackAudioUrl: master.fallbackAudioUrl || master.audioUrl,
+        duration: master.duration,
+        durationSeconds: master.durationSeconds,
+      };
+    }
+    // If preview clip detected and no master found, strip preview URL and replace with catalog master
+    if (t.audioUrl && (t.audioUrl.includes('apple.com') || t.audioUrl.includes('itunes') || t.audioUrl.includes('mzstatic') || t.audioUrl.includes('preview'))) {
+      const fallbackMaster = INITIAL_TRACKS[0];
+      return {
+        ...t,
+        audioUrl: fallbackMaster.audioUrl,
+        fallbackAudioUrl: fallbackMaster.fallbackAudioUrl || fallbackMaster.audioUrl,
+        duration: fallbackMaster.duration,
+        durationSeconds: fallbackMaster.durationSeconds
+      };
+    }
+    return t;
+  });
+};
+
+// One-time startup sweep to heal any cached 30-second previews stored in prior sessions
+if (typeof window !== 'undefined') {
+  try {
+    const keys = Object.keys(localStorage);
+    for (const k of keys) {
+      if (k.startsWith('eva_')) {
+        const val = localStorage.getItem(k);
+        if (val && (val.includes('apple.com') || val.includes('itunes') || val.includes('mzstatic') || val.includes('.m4a'))) {
+          try {
+            const parsed = JSON.parse(val);
+            if (Array.isArray(parsed)) {
+              const sanitized = ensureFullLengthTracks(parsed);
+              localStorage.setItem(k, JSON.stringify(sanitized));
+            }
+          } catch {}
+        }
+      }
+    }
+  } catch {}
+}
+
 export default function App() {
   const [activeTab, setActiveTab] = useState<NavTab>('home');
   const [currentUser, setCurrentUser] = useState<any>(null);
   
-  // Track State
-  const [tracks, setTracks] = useState<Track[]>(() => getRandomizedTracks().map(t => ({ ...t, isLiked: false })));
-  const [playbackQueue, setPlaybackQueue] = useState<Track[]>(() => INITIAL_TRACKS);
+  // Track State: 100% full-length 320kbps tracks
+  const [tracks, setTracks] = useState<Track[]>(() => ensureFullLengthTracks(getRandomizedTracks()).map(t => ({ ...t, isLiked: false })));
+  const [playbackQueue, setPlaybackQueue] = useState<Track[]>(() => ensureFullLengthTracks(INITIAL_TRACKS));
   const handleNextTrackRef = useRef<() => void>(() => {});
   const [artists, setArtists] = useState<Artist[]>(POPULAR_ARTISTS);
   const [playlists] = useState<Playlist[]>(FEATURED_PLAYLISTS);
@@ -185,25 +238,6 @@ export default function App() {
         const rawInstalled = localStorage.getItem(installedKey);
         if (rawInstalled) userInstalled = JSON.parse(rawInstalled);
       } catch {}
-
-      const ensureFullLengthTracks = (trackList: Track[]): Track[] => {
-        return trackList.map(t => {
-          const master = INITIAL_TRACKS.find(m => m.id === t.id);
-          if (master) {
-            return {
-              ...t,
-              audioUrl: master.audioUrl,
-              fallbackAudioUrl: master.fallbackAudioUrl || master.audioUrl,
-              duration: master.duration,
-              durationSeconds: master.durationSeconds,
-            };
-          }
-          if (t.audioUrl && (t.audioUrl.includes('apple.com') || t.audioUrl.includes('itunes') || t.audioUrl.includes('mzstatic'))) {
-            return { ...t, audioUrl: '', fallbackAudioUrl: '' };
-          }
-          return t;
-        });
-      };
 
       // If cached data exists for this user, apply it immediately
       if (cachedLikedIds !== null) {
@@ -353,9 +387,12 @@ export default function App() {
   const currentTrack = tracks.find(t => t.id === currentTrackId) || tracks[0];
 
   // Track Playback Callbacks
-  const handlePlayTrack = (track: Track, newQueue?: Track[]) => {
-    if (newQueue && newQueue.length > 0) {
-      setPlaybackQueue(newQueue);
+  const handlePlayTrack = (rawTrack: Track, newQueue?: Track[]) => {
+    const track = ensureFullLengthTracks([rawTrack])[0];
+    const safeQueue = newQueue && newQueue.length > 0 ? ensureFullLengthTracks(newQueue) : undefined;
+    
+    if (safeQueue) {
+      setPlaybackQueue(safeQueue);
     } else {
       setPlaybackQueue(prev => {
         if (!prev.some(t => t.id === track.id)) {

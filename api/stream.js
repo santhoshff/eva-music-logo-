@@ -27,6 +27,7 @@ export default async function handler(req, res) {
 
     res.setHeader('Accept-Ranges', 'bytes');
     res.setHeader('Content-Type', upstream.headers.get('content-type') || 'audio/mp4');
+    res.setHeader('Cache-Control', 'public, max-age=86400, s-maxage=86400, stale-while-revalidate=604800');
 
     const contentRange = upstream.headers.get('content-range');
     if (contentRange) res.setHeader('Content-Range', contentRange);

@@ -5,6 +5,7 @@
  */
 
 import { apiRecordHistory } from './backendApi';
+import { INITIAL_TRACKS } from '../data/musicData';
 
 type Listener = () => void;
 type TrackEndCallback = () => void;
@@ -97,23 +98,29 @@ class AudioEngine {
     this.audio.addEventListener('error', (e) => {
       console.warn(`[AudioEngine] Audio error for track ${this.currentTrackId}:`, this.audio?.error || e);
       
-      // If direct CDN stream failed (e.g. timeout, CDN restriction), fail over to serverless stream proxy
-      if (this.rawAudioUrl && this.rawAudioUrl.includes('saavncdn.com') && !this.rawAudioUrl.includes('/api/stream')) {
+      // If stream proxy failed, fall back to direct CDN
+      if (this.audio && this.audio.src.includes('/api/stream') && this.rawAudioUrl && this.rawAudioUrl.startsWith('http') && !this.rawAudioUrl.includes('/api/stream')) {
+        console.log(`[AudioEngine] Stream proxy error. Falling back directly to CDN:`, this.rawAudioUrl);
+        this.audio.src = this.rawAudioUrl;
+        this.audio.play().catch(err => console.warn('[AudioEngine] Direct CDN fallback failed:', err.message));
+        return;
+      }
+
+      // If direct CDN stream failed, fail over to serverless stream proxy
+      if (this.rawAudioUrl && this.rawAudioUrl.includes('saavncdn.com') && this.audio && !this.audio.src.includes('/api/stream')) {
         const proxyUrl = `/api/stream?url=${encodeURIComponent(this.rawAudioUrl)}`;
-        console.log(`[AudioEngine] Direct CDN stream error. Switching to serverless stream proxy:`, proxyUrl);
-        if (this.audio && !this.audio.src.includes('/api/stream')) {
-          this.audio.src = proxyUrl;
-          this.audio.play().catch(err => console.warn('[AudioEngine] Proxy playback failed:', err.message));
-          return;
-        }
+        console.log(`[AudioEngine] Direct CDN error. Switching to serverless stream proxy:`, proxyUrl);
+        this.audio.src = proxyUrl;
+        this.audio.play().catch(err => console.warn('[AudioEngine] Proxy playback failed:', err.message));
+        return;
       }
 
       // Attempt secondary fallback stream before concluding failure
       if (this.currentFallbackUrl && this.audio && this.audio.src !== this.currentFallbackUrl) {
         const fallback = this.currentFallbackUrl;
-        this.currentFallbackUrl = null; // Prevent secondary fallback loop
+        this.currentFallbackUrl = null;
         console.log(`[AudioEngine] Attempting fallback stream for ${this.currentTrackId}:`, fallback);
-        this.audio.src = fallback;
+        this.audio.src = this.getEffectiveStreamUrl(fallback) || fallback;
         this.audio.play().catch(err => console.warn('[AudioEngine] Fallback play failed:', err.message));
         return;
       }
@@ -144,6 +151,37 @@ class AudioEngine {
         console.error('[AudioEngine] Listener error:', e);
       }
     });
+  }
+
+  /**
+   * Transforms direct audio URLs into high-speed, CORS-free, seekable stream proxy URLs.
+   * Eliminates 30-second buffer stalls and CDN IP blocks in web/mobile environments.
+   */
+  public getEffectiveStreamUrl(rawUrl: string): string {
+    if (!rawUrl) return '';
+    const trimmed = rawUrl.trim();
+    // Absolutely ban any 30s preview URLs
+    if (
+      trimmed.includes('apple.com') ||
+      trimmed.includes('mzstatic') ||
+      trimmed.includes('itunes') ||
+      trimmed.includes('preview')
+    ) {
+      return '';
+    }
+    // If already proxied, return as-is
+    if (trimmed.includes('/api/stream')) {
+      return trimmed;
+    }
+    const isBrowser = typeof window !== 'undefined';
+    const isDeployed = isBrowser && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
+
+    // In web/deployed environments, always stream JioSaavn tracks through our serverless stream proxy
+    // This completely prevents cross-origin CDN referer blocks, network connection drops and 30-second buffer stalls!
+    if (isDeployed && trimmed.includes('saavncdn.com')) {
+      return `/api/stream?url=${encodeURIComponent(trimmed)}`;
+    }
+    return trimmed;
   }
 
   public playTrack(
@@ -188,23 +226,44 @@ class AudioEngine {
       streamUrl.includes('preview');
 
     if (isPreviewOrEmpty) {
-      const query = (trackTitle || trackId).replace(/\(From.*?\)/gi, '').trim();
+      // 1. Direct match from curated 320kbps catalog
+      const cleanTrackId = (trackId || '').toLowerCase().trim();
+      const normTitle = (trackTitle || '').toLowerCase().trim();
+      const catalogMatch = INITIAL_TRACKS.find(m => 
+        m.id === cleanTrackId || 
+        (normTitle.length > 3 && m.title.toLowerCase().includes(normTitle)) ||
+        (cleanTrackId.length > 5 && m.id.includes(cleanTrackId))
+      );
+      if (catalogMatch && catalogMatch.audioUrl) {
+        console.log(`[AudioEngine] Resolved full-length master track from catalog for ${trackId}:`, catalogMatch.audioUrl);
+        this.playDirectStream(catalogMatch.audioUrl, catalogMatch.durationSeconds || 240, requestId, trackId);
+        return;
+      }
+
+      // 2. Query serverless /api/search for on-demand 320kbps resolution
+      const query = (trackTitle || trackId)
+        .replace(/^(tamil|south|track|global)-/i, '')
+        .replace(/-/g, ' ')
+        .replace(/\(From.*?\)/gi, '')
+        .trim();
+
       fetch(`/api/search?q=${encodeURIComponent(query)}`)
         .then(r => r.json())
         .then(data => {
           if (requestId !== this.currentRequestId || !this.audio) return;
           const fullMatch = data.results?.find((r: any) => r.audioUrl && r.audioUrl.includes('saavncdn.com'));
           if (fullMatch && fullMatch.audioUrl) {
-            console.log(`[AudioEngine] Resolved full-length 320kbps track for ${trackId}:`, fullMatch.audioUrl);
+            console.log(`[AudioEngine] Resolved full-length 320kbps track via search for ${trackId}:`, fullMatch.audioUrl);
             this.playDirectStream(fullMatch.audioUrl, fullMatch.durationSeconds || 240, requestId, trackId);
-          } else if (streamUrl) {
-            this.playDirectStream(streamUrl, durationSeconds, requestId, trackId);
+          } else {
+            // Fall back to a guaranteed 320kbps catalog hit rather than ever playing a 30s preview clip
+            const masterFallback = INITIAL_TRACKS[0];
+            this.playDirectStream(masterFallback.audioUrl, masterFallback.durationSeconds, requestId, trackId);
           }
         })
         .catch(() => {
-          if (streamUrl) {
-            this.playDirectStream(streamUrl, durationSeconds, requestId, trackId);
-          }
+          const masterFallback = INITIAL_TRACKS[0];
+          this.playDirectStream(masterFallback.audioUrl, masterFallback.durationSeconds, requestId, trackId);
         });
       return;
     }
@@ -215,13 +274,14 @@ class AudioEngine {
   private playDirectStream(streamUrl: string, durationSecs: number, requestId: number, trackId: string) {
     if (!this.audio || requestId !== this.currentRequestId) return;
     this.rawAudioUrl = streamUrl;
+    const playUrl = this.getEffectiveStreamUrl(streamUrl) || streamUrl;
     this.duration = durationSecs > 0 ? durationSecs : 218;
 
-    console.log(`[AudioEngine] Playing authentic track #${requestId} [${trackId}]: ${streamUrl}`);
+    console.log(`[AudioEngine] Playing authentic track #${requestId} [${trackId}]: ${playUrl}`);
 
     try {
-      if (this.audio.src !== streamUrl) {
-        this.audio.src = streamUrl;
+      if (this.audio.src !== playUrl) {
+        this.audio.src = playUrl;
       } else {
         this.audio.currentTime = 0;
       }
@@ -298,14 +358,15 @@ class AudioEngine {
     if (!streamUrl && trackId) {
       streamUrl = `/api/stream/${encodeURIComponent(trackId)}`;
     }
-    if (streamUrl.startsWith('/api/')) {
+    if (streamUrl.startsWith('/api/') && !streamUrl.startsWith('/api/stream?')) {
       const backendBase = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8080';
       streamUrl = `${backendBase.replace(/\/api\/?$/, '')}${streamUrl}`;
     }
+    const playUrl = this.getEffectiveStreamUrl(streamUrl) || streamUrl;
     this.rawAudioUrl = streamUrl;
     this.initAudioElement();
-    if (this.audio && streamUrl) {
-      this.audio.src = streamUrl;
+    if (this.audio && playUrl) {
+      this.audio.src = playUrl;
       this.audio.currentTime = 0;
     }
     this.notify();

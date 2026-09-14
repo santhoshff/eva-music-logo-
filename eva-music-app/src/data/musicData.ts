@@ -510,7 +510,7 @@ export const INITIAL_TRACKS: Track[] = [
     genre: 'Tamil Melodies',
     isLiked: false,
     coverUrl: 'https://c.saavncdn.com/490/Manmadhan-Tamil-2004-500x500.jpg',
-    audioUrl: 'https://aac.saavncdn.com/490/379755d3179311e006a74ebd5d6ce732_96.mp4',
+    audioUrl: 'https://aac.saavncdn.com/490/379755d3179311e006a74ebd5d6ce732_320.mp4',
     releaseYear: '2004',
     plays: '155M'
   },
@@ -524,7 +524,7 @@ export const INITIAL_TRACKS: Track[] = [
     genre: 'Tamil Romantic Melodies',
     isLiked: false,
     coverUrl: 'https://c.saavncdn.com/450/Minnale-Tamil-2001-20220429143413-500x500.jpg',
-    audioUrl: 'https://aac.saavncdn.com/450/4f7b9da8e887586e60b11afb602befac_96.mp4',
+    audioUrl: 'https://aac.saavncdn.com/450/4f7b9da8e887586e60b11afb602befac_320.mp4',
     releaseYear: '2001',
     plays: '240M'
   },
@@ -538,7 +538,7 @@ export const INITIAL_TRACKS: Track[] = [
     genre: 'Tamil Melodies',
     isLiked: false,
     coverUrl: 'https://c.saavncdn.com/450/Minnale-Tamil-2001-20220429143413-500x500.jpg',
-    audioUrl: 'https://aac.saavncdn.com/450/273780841267e983e0131e4f3b00d595_96.mp4',
+    audioUrl: 'https://aac.saavncdn.com/450/273780841267e983e0131e4f3b00d595_320.mp4',
     releaseYear: '2001',
     plays: '220M'
   },
@@ -552,7 +552,7 @@ export const INITIAL_TRACKS: Track[] = [
     genre: 'Tamil Melodies',
     isLiked: false,
     coverUrl: 'https://c.saavncdn.com/868/Enai-Noki-Paayum-Thota-Tamil-2019-20190906164227-500x500.jpg',
-    audioUrl: 'https://aac.saavncdn.com/868/9262e547013e284c0555d4c6faf3bf1a_96.mp4',
+    audioUrl: 'https://aac.saavncdn.com/868/9262e547013e284c0555d4c6faf3bf1a_320.mp4',
     releaseYear: '2019',
     plays: '260M'
   },
@@ -566,7 +566,7 @@ export const INITIAL_TRACKS: Track[] = [
     genre: 'Tamil Melodies',
     isLiked: false,
     coverUrl: 'https://c.saavncdn.com/506/Kabali-Tamil-2016-500x500.jpg',
-    audioUrl: 'https://aac.saavncdn.com/506/4bfb2976c1c9218564aba5b8464faa12_96.mp4',
+    audioUrl: 'https://aac.saavncdn.com/506/4bfb2976c1c9218564aba5b8464faa12_320.mp4',
     releaseYear: '2016',
     plays: '135M'
   },
