@@ -11,7 +11,8 @@ interface HomeScreenProps {
   artists: Artist[];
   currentTrackId: string | null;
   isPlaying: boolean;
-  onPlayTrack: (track: Track) => void;
+  onPlayTrack: (track: Track, queue?: Track[]) => void;
+  onTogglePlay?: () => void;
   onPlayPlaylist: (playlist: Playlist) => void;
   onSelectArtist: (artist: Artist) => void;
   onToggleLike: (trackId: string) => void;
@@ -24,6 +25,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
   currentTrackId,
   isPlaying,
   onPlayTrack,
+  onTogglePlay,
   onSelectArtist,
   onToggleLike,
   onNavigateToDiscover,
@@ -69,7 +71,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
 
   const handlePlayAllTop20 = () => {
     if (userTop20.length > 0) {
-      onPlayTrack(userTop20[0]);
+      onPlayTrack(userTop20[0], userTop20);
     }
   };
 
@@ -127,7 +129,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
                   transition={{ duration: 0.35, ease: 'easeInOut' }}
                   onClick={() => {
                     setActiveTrackIndex(index);
-                    onPlayTrack(track);
+                    onPlayTrack(track, trendingTracks);
                   }}
                   onHoverStart={() => setActiveTrackIndex(index)}
                 >
@@ -172,7 +174,11 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
-                              onPlayTrack(track);
+                              if (isCurrentPlaying && onTogglePlay) {
+                                onTogglePlay();
+                              } else {
+                                onPlayTrack(track, trendingTracks);
+                              }
                             }}
                             className="mt-2 w-9 h-9 rounded-full bg-purple-600 text-white flex items-center justify-center shadow-lg shadow-purple-500/50 hover:scale-110 active:scale-95 transition-all cursor-pointer"
                           >
@@ -291,7 +297,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
                 key={track.id}
                 whileHover={{ y: -3 }}
                 whileTap={{ scale: 0.98 }}
-                onClick={() => onPlayTrack(track)}
+                onClick={() => onPlayTrack(track, NEW_RELEASES_LINEUP)}
                 className="relative shrink-0 w-38 rounded-2xl bg-white p-2.5 shadow-md hover:shadow-xl border border-slate-100 hover:border-purple-300 transition-all cursor-pointer group flex flex-col"
               >
                 {/* Cover Image */}
@@ -378,7 +384,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
                 key={track.id}
                 whileHover={{ scale: 1.01 }}
                 whileTap={{ scale: 0.99 }}
-                onClick={() => onPlayTrack(track)}
+                onClick={() => onPlayTrack(track, userTop20)}
                 className={`flex items-center gap-3 p-2.5 rounded-2xl transition-all cursor-pointer border ${
                   isCurrent
                     ? 'bg-purple-50 border-purple-300 shadow-sm'
@@ -466,7 +472,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
-                      onPlayTrack(track);
+                      onPlayTrack(track, userTop20);
                     }}
                     className={`w-8 h-8 rounded-full flex items-center justify-center transition-all cursor-pointer ${
                       isCurrent

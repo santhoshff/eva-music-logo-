@@ -6,7 +6,7 @@ interface PlaylistDetailModalProps {
   playlist: Playlist | GenreCategory | null;
   tracks: Track[];
   onClose: () => void;
-  onPlayTrack: (track: Track) => void;
+  onPlayTrack: (track: Track, queue?: Track[]) => void;
   onPlayAll: (tracks: Track[]) => void;
 }
 
@@ -63,7 +63,7 @@ export const PlaylistDetailModal: React.FC<PlaylistDetailModalProps> = ({
           {playlistTracks.map((track) => (
             <div
               key={track.id}
-              onClick={() => onPlayTrack(track)}
+              onClick={() => onPlayTrack(track, playlistTracks)}
               className="flex items-center gap-3 p-2.5 rounded-2xl bg-white/70 backdrop-blur-md border border-white/80 hover:bg-white transition-all cursor-pointer group"
             >
               <img src={track.coverUrl} alt={track.title} className="w-11 h-11 rounded-xl object-cover" />

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Header } from './components/Header';
 import { HomeScreen } from './components/HomeScreen';
 import { DiscoverScreen } from './components/DiscoverScreen';
@@ -105,6 +105,8 @@ export default function App() {
   
   // Track State
   const [tracks, setTracks] = useState<Track[]>(() => getRandomizedTracks().map(t => ({ ...t, isLiked: false })));
+  const [playbackQueue, setPlaybackQueue] = useState<Track[]>(() => INITIAL_TRACKS);
+  const handleNextTrackRef = useRef<() => void>(() => {});
   const [artists, setArtists] = useState<Artist[]>(POPULAR_ARTISTS);
   const [playlists] = useState<Playlist[]>(FEATURED_PLAYLISTS);
   const [categories] = useState<GenreCategory[]>(GENRE_CATEGORIES);
@@ -308,7 +310,7 @@ export default function App() {
       if (liveHits && liveHits.length > 0) {
         const likedIds = getActiveLikedIds();
         setTracks(prev => {
-          const merged = [...liveHits, ...prev];
+          const merged = [...prev, ...liveHits];
           const unique = merged.filter((t, index, self) => index === self.findIndex(s => s.id === t.id));
           return unique.map(t => ({
             ...t,
@@ -332,7 +334,18 @@ export default function App() {
   const currentTrack = tracks.find(t => t.id === currentTrackId) || tracks[0];
 
   // Track Playback Callbacks
-  const handlePlayTrack = (track: Track) => {
+  const handlePlayTrack = (track: Track, newQueue?: Track[]) => {
+    if (newQueue && newQueue.length > 0) {
+      setPlaybackQueue(newQueue);
+    } else {
+      setPlaybackQueue(prev => {
+        if (!prev.some(t => t.id === track.id)) {
+          return [...prev, track];
+        }
+        return prev;
+      });
+    }
+
     setTracks(prev => {
       if (!prev.some(t => t.id === track.id)) {
         return [track, ...prev];
@@ -340,7 +353,16 @@ export default function App() {
       return prev;
     });
     setCurrentTrackId(track.id);
-    audioEngine.playTrack(track.id, track.audioUrl, track.durationSeconds, track.fallbackAudioUrl);
+    audioEngine.playTrack(track.id, track.audioUrl, track.durationSeconds, track.fallbackAudioUrl, track.genre);
+    audioEngine.updateMediaSession(
+      { title: track.title, artist: track.artist, album: track.genre, coverUrl: track.coverUrl },
+      {
+        onNext: () => handleNextTrackRef.current(),
+        onPrev: () => handlePrevTrack(),
+        onTogglePlay: () => audioEngine.togglePlay(),
+        onSeek: (secs) => audioEngine.seek(secs),
+      }
+    );
   };
 
   const handleTogglePlay = () => {
@@ -348,16 +370,64 @@ export default function App() {
   };
 
   const handleNextTrack = () => {
-    const currentIndex = tracks.findIndex(t => t.id === currentTrackId);
-    const nextIndex = (currentIndex + 1) % tracks.length;
-    handlePlayTrack(tracks[nextIndex]);
+    const queue = (playbackQueue && playbackQueue.length > 0) ? playbackQueue : tracks;
+    if (queue.length === 0) return;
+
+    const isShuffle = audioEngine.getState().isShuffle;
+    const currentIndex = queue.findIndex(t => t.id === currentTrackId);
+    let nextIndex = 0;
+
+    if (isShuffle && queue.length > 1) {
+      do {
+        nextIndex = Math.floor(Math.random() * queue.length);
+      } while (nextIndex === currentIndex);
+    } else if (currentIndex >= 0 && currentIndex + 1 < queue.length) {
+      nextIndex = currentIndex + 1;
+    } else {
+      // Reached end of current queue (Continuous autoplay like Spotify & Echo Music)
+      const repeatMode = audioEngine.getState().repeatMode;
+      if (repeatMode === 'all') {
+        nextIndex = 0;
+      } else {
+        // Auto-advance to a smart recommendation from catalog
+        const nextTrack = tracks.find(t => t.id !== currentTrackId && !queue.some(q => q.id === t.id)) || tracks[0];
+        if (nextTrack) {
+          handlePlayTrack(nextTrack, [...queue, nextTrack]);
+          return;
+        }
+        nextIndex = 0;
+      }
+    }
+
+    handlePlayTrack(queue[nextIndex], queue);
   };
 
   const handlePrevTrack = () => {
-    const currentIndex = tracks.findIndex(t => t.id === currentTrackId);
-    const prevIndex = (currentIndex - 1 + tracks.length) % tracks.length;
-    handlePlayTrack(tracks[prevIndex]);
+    const queue = (playbackQueue && playbackQueue.length > 0) ? playbackQueue : tracks;
+    if (queue.length === 0) return;
+
+    // If song played > 3 seconds, seek back to 0:00 (standard Spotify / Echo Music behavior)
+    if (playerState.currentTime > 3) {
+      audioEngine.seek(0);
+      return;
+    }
+
+    const currentIndex = queue.findIndex(t => t.id === currentTrackId);
+    const prevIndex = (currentIndex - 1 + queue.length) % queue.length;
+    handlePlayTrack(queue[prevIndex], queue);
   };
+
+  // Keep ref synchronized across renders
+  handleNextTrackRef.current = handleNextTrack;
+
+  // Wire automatic track progression on song finish (never drops callback)
+  useEffect(() => {
+    audioEngine.setOnTrackEnd(() => {
+      console.log('[App] Song completed -> Auto-switching to next song');
+      handleNextTrackRef.current();
+    });
+    return () => audioEngine.setOnTrackEnd(null);
+  }, []);
 
   const handleToggleLike = (trackId: string) => {
     // Identify active user credentials from state or localStorage
@@ -438,7 +508,7 @@ export default function App() {
 
   const handlePlayAll = (trackList: Track[]) => {
     if (trackList.length > 0) {
-      handlePlayTrack(trackList[0]);
+      handlePlayTrack(trackList[0], trackList);
     }
   };
 
@@ -510,6 +580,7 @@ export default function App() {
               currentTrackId={currentTrackId}
               isPlaying={playerState.isPlaying}
               onPlayTrack={handlePlayTrack}
+              onTogglePlay={handleTogglePlay}
               onPlayPlaylist={setSelectedPlaylist}
               onSelectArtist={setSelectedArtist}
               onToggleLike={handleToggleLike}
@@ -574,7 +645,7 @@ export default function App() {
           isOpen={isFullPlayerOpen}
           onClose={() => setIsFullPlayerOpen(false)}
           currentTrack={currentTrack}
-          queue={tracks}
+          queue={playbackQueue.length > 0 ? playbackQueue : tracks}
           isPlaying={playerState.isPlaying}
           currentTime={playerState.currentTime}
           duration={playerState.duration}
@@ -591,7 +662,7 @@ export default function App() {
           onToggleShuffle={() => audioEngine.toggleShuffle()}
           onToggleRepeat={() => audioEngine.toggleRepeat()}
           onToggleLike={handleToggleLike}
-          onSelectQueueTrack={handlePlayTrack}
+          onSelectQueueTrack={(t) => handlePlayTrack(t, playbackQueue.length > 0 ? playbackQueue : tracks)}
         />
 
         {/* Gen Z User Profile Modal */}
@@ -619,6 +690,7 @@ export default function App() {
           artist={selectedArtist}
           onClose={() => setSelectedArtist(null)}
           onPlayTrack={handlePlayTrack}
+          onTogglePlay={handleTogglePlay}
           onToggleFollow={handleToggleFollowArtist}
           currentTrackId={currentTrackId}
           isPlaying={playerState.isPlaying}

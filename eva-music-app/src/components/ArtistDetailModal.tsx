@@ -1,11 +1,12 @@
 import React from 'react';
-import { X, Play, Heart, Flame, Sparkles, Check, Music2 } from 'lucide-react';
+import { X, Play, Pause, Heart, Flame, Sparkles, Check, Music2 } from 'lucide-react';
 import { Artist, Track } from '../types';
 
 interface ArtistDetailModalProps {
   artist: Artist | null;
   onClose: () => void;
-  onPlayTrack: (track: Track) => void;
+  onPlayTrack: (track: Track, queue?: Track[]) => void;
+  onTogglePlay?: () => void;
   onToggleFollow: (artistId: string) => void;
   currentTrackId?: string | null;
   isPlaying?: boolean;
@@ -15,6 +16,7 @@ export const ArtistDetailModal: React.FC<ArtistDetailModalProps> = ({
   artist,
   onClose,
   onPlayTrack,
+  onTogglePlay,
   onToggleFollow,
   currentTrackId,
   isPlaying,
@@ -23,7 +25,7 @@ export const ArtistDetailModal: React.FC<ArtistDetailModalProps> = ({
 
   const handlePlayAll = () => {
     if (artist.topTracks.length > 0) {
-      onPlayTrack(artist.topTracks[0]);
+      onPlayTrack(artist.topTracks[0], artist.topTracks);
     }
   };
 
@@ -140,7 +142,13 @@ export const ArtistDetailModal: React.FC<ArtistDetailModalProps> = ({
                 return (
                   <div
                     key={track.id}
-                    onClick={() => onPlayTrack(track)}
+                    onClick={() => {
+                      if (isCurrent && onTogglePlay) {
+                        onTogglePlay();
+                      } else {
+                        onPlayTrack(track, artist.topTracks);
+                      }
+                    }}
                     className={`flex items-center gap-3 p-2.5 rounded-2xl border transition-all cursor-pointer group ${
                       isCurrent
                         ? 'bg-purple-900/40 border-purple-500/50 shadow-md shadow-purple-950/40'
@@ -191,12 +199,22 @@ export const ArtistDetailModal: React.FC<ArtistDetailModalProps> = ({
                       <span className="text-[11px] font-medium text-slate-400 hidden sm:inline">
                         {track.duration}
                       </span>
-                      <button className={`w-8 h-8 rounded-full flex items-center justify-center transition-all ${
-                        isCurrent
-                          ? 'bg-purple-500 text-white shadow-md shadow-purple-500/40 scale-105'
-                          : 'bg-purple-900/40 text-purple-300 group-hover:bg-purple-600 group-hover:text-white'
-                      }`}>
-                        <Play size={13} className="fill-current ml-0.5" />
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (isCurrent && onTogglePlay) {
+                            onTogglePlay();
+                          } else {
+                            onPlayTrack(track, artist.topTracks);
+                          }
+                        }}
+                        className={`w-8 h-8 rounded-full flex items-center justify-center transition-all cursor-pointer ${
+                          isCurrent
+                            ? 'bg-purple-500 text-white shadow-md shadow-purple-500/40 scale-105'
+                            : 'bg-purple-900/40 text-purple-300 group-hover:bg-purple-600 group-hover:text-white'
+                        }`}
+                      >
+                        {isCurrent ? <Pause size={13} className="fill-current" /> : <Play size={13} className="fill-current ml-0.5" />}
                       </button>
                     </div>
                   </div>

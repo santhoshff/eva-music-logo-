@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
-import { MoreVertical, SlidersHorizontal, Heart } from 'lucide-react';
+import { MoreVertical, SlidersHorizontal, Heart, Play } from 'lucide-react';
 import { Track } from '../types';
 
 interface LibraryScreenProps {
   tracks: Track[];
   currentTrackId: string | null;
   isPlaying: boolean;
-  onPlayTrack: (track: Track) => void;
+  onPlayTrack: (track: Track, queue?: Track[]) => void;
   onToggleLike: (trackId: string) => void;
   onOpenInstallModal?: () => void;
 }
@@ -50,13 +50,24 @@ export const LibraryScreen: React.FC<LibraryScreenProps> = ({
           </p>
         </div>
 
-        <button
-          onClick={cycleSortOrder}
-          className="flex items-center gap-1.5 text-xs font-bold text-purple-800 bg-white/70 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/90 shadow-2xs hover:bg-white active:scale-95 transition-all cursor-pointer"
-        >
-          <SlidersHorizontal size={13} />
-          {sortOrder}
-        </button>
+        <div className="flex items-center gap-2">
+          {sortedTracks.length > 0 && (
+            <button
+              onClick={() => onPlayTrack(sortedTracks[0], sortedTracks)}
+              className="flex items-center gap-1.5 text-xs font-bold text-white bg-purple-600 hover:bg-purple-700 px-3 py-1.5 rounded-full shadow-md shadow-purple-500/20 active:scale-95 transition-all cursor-pointer"
+            >
+              <Play size={12} className="fill-current ml-0.5" />
+              Play All
+            </button>
+          )}
+          <button
+            onClick={cycleSortOrder}
+            className="flex items-center gap-1.5 text-xs font-bold text-purple-800 bg-white/70 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/90 shadow-2xs hover:bg-white active:scale-95 transition-all cursor-pointer"
+          >
+            <SlidersHorizontal size={13} />
+            {sortOrder}
+          </button>
+        </div>
       </div>
 
       {/* Track List Container Card */}
@@ -85,7 +96,7 @@ export const LibraryScreen: React.FC<LibraryScreenProps> = ({
               >
                 {/* Track Cover & Details */}
                 <div
-                  onClick={() => onPlayTrack(track)}
+                  onClick={() => onPlayTrack(track, sortedTracks)}
                   className="flex items-center gap-3.5 flex-1 min-w-0 pr-2"
                 >
                   <div className="relative flex-none w-14 h-14 rounded-xl overflow-hidden shadow-2xs bg-slate-100">

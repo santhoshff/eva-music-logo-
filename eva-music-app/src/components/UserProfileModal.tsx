@@ -13,7 +13,7 @@ interface UserProfileModalProps {
   profile: UserProfile;
   onUpdateProfile: (updated: UserProfile) => void;
   allTracks: Track[];
-  onPlayTrack: (track: Track) => void;
+  onPlayTrack: (track: Track, queue?: Track[]) => void;
   isPlaying: boolean;
   currentTrackId: string | null;
 }
@@ -98,55 +98,49 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/60 backdrop-blur-xl animate-in fade-in duration-200">
       <div className="relative w-full max-w-md bg-gradient-to-b from-purple-900/90 via-slate-900/95 to-slate-950 rounded-[2.5rem] border border-purple-500/30 shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
         
-        {/* Header Cover Banner */}
-        <div className="relative h-36 w-full bg-gradient-to-r from-purple-600 via-fuchsia-500 to-pink-500 overflow-hidden">
-          {/* Animated Glow Blobs */}
-          <div className="absolute top-[-50%] left-[-20%] w-60 h-60 bg-indigo-400/40 rounded-full blur-2xl animate-pulse" />
-          <div className="absolute bottom-[-30%] right-[-10%] w-52 h-52 bg-pink-400/50 rounded-full blur-2xl" />
-          
-          {/* Cover Overlay & Close button */}
-          <div className="absolute inset-0 bg-black/10" />
+        {/* Sticky Header with Close */}
+        <div className="p-4 flex items-center justify-between border-b border-purple-900/40 shrink-0">
+          <div className="flex items-center gap-2">
+            <span className="text-xl">✨</span>
+            <span className="text-xs font-black uppercase tracking-widest text-purple-300">Aura Passport</span>
+          </div>
           <button
             onClick={onClose}
-            className="absolute top-4 right-4 z-20 w-9 h-9 rounded-full bg-black/40 backdrop-blur-md text-white flex items-center justify-center hover:bg-black/60 transition-all border border-white/20 active:scale-95"
+            className="p-1.5 rounded-full bg-purple-950/60 text-purple-300 hover:text-white hover:bg-purple-900/80 transition-colors"
           >
             <X size={18} />
           </button>
-
-          {/* Vibe Badge */}
-          <div className="absolute top-4 left-4 z-10 px-3 py-1 rounded-full bg-white/20 backdrop-blur-md border border-white/30 text-white text-[11px] font-bold flex items-center gap-1.5 shadow-sm">
-            <Sparkles size={13} className="text-yellow-300 animate-spin-slow" />
-            <span>{profile.vibeArchetype}</span>
-          </div>
         </div>
 
-        {/* Profile Avatar & Primary Info Section */}
-        <div className="relative px-6 pt-0 pb-3 flex flex-col items-center text-center -mt-14 z-10">
-          {/* Avatar Container with Glow Ring */}
+        {/* Profile Identity Hero */}
+        <div className="p-6 flex flex-col items-center text-center relative border-b border-purple-900/30 bg-purple-950/20">
+          
+          {/* Avatar with Animated Pulse Border */}
           <div className="relative group">
-            <div className="absolute -inset-1 bg-gradient-to-tr from-purple-500 via-pink-400 to-indigo-400 rounded-full blur-md opacity-80 group-hover:opacity-100 transition duration-300" />
-            <img
-              src={profile.avatarUrl}
-              alt={profile.name}
-              className="relative w-24 h-24 rounded-full object-cover border-4 border-slate-900 shadow-xl"
-            />
+            <div className="w-24 h-24 rounded-full p-1 bg-gradient-to-tr from-pink-500 via-purple-500 to-cyan-400 animate-spin-slow">
+              <img
+                src={profile.avatarUrl}
+                alt={profile.name}
+                className="w-full h-full rounded-full object-cover bg-slate-900 border-2 border-slate-950"
+              />
+            </div>
+            <div className="absolute -bottom-1 -right-1 p-1.5 rounded-full bg-pink-500 text-white shadow-lg border border-purple-900">
+              <Sparkles size={13} />
+            </div>
+          </div>
+
+          {/* Name & Handle */}
+          <div className="mt-3 flex items-center gap-1.5">
+            <h3 className="text-xl font-black text-white tracking-tight">{profile.name}</h3>
             {profile.isPro && (
-              <span className="absolute bottom-1 right-1 p-1.5 rounded-full bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 shadow-lg border border-slate-900" title="EVA Pro Member">
-                <Crown size={14} className="fill-slate-950" />
+              <span className="p-0.5 rounded-full bg-cyan-400 text-slate-950 text-[10px] font-black">
+                ✓
               </span>
             )}
           </div>
+          <p className="text-xs font-semibold text-purple-300">@{profile.handle}</p>
 
-          {/* User Name & Tag */}
-          <div className="mt-2.5 flex items-center gap-2">
-            <h2 className="text-2xl font-black text-white tracking-tight">{profile.name}</h2>
-            <span className="px-2.5 py-0.5 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 text-white text-[10px] font-extrabold uppercase tracking-wider shadow-sm">
-              PRO
-            </span>
-          </div>
-          <p className="text-xs font-semibold text-purple-300/80">@{profile.handle}</p>
-
-          {/* Gen Z Status / Mood Pill */}
+          {/* Dynamic Status Mood Pill */}
           <div className="mt-3 px-4 py-1.5 rounded-full bg-purple-950/80 border border-purple-500/40 text-purple-200 text-xs font-medium flex items-center gap-2 shadow-inner">
             <span className="text-sm">{profile.statusEmoji}</span>
             <span className="italic">{profile.statusMood}</span>
@@ -223,7 +217,7 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
               {/* Personal Anthem Card */}
               <div className="p-4 rounded-2xl bg-gradient-to-r from-purple-900/60 to-indigo-900/60 border border-purple-500/30 flex items-center justify-between gap-3 shadow-lg">
                 <div className="flex items-center gap-3">
-                  <div className="relative group cursor-pointer" onClick={() => onPlayTrack(anthemTrack)}>
+                  <div className="relative group cursor-pointer" onClick={() => onPlayTrack(anthemTrack, allTracks)}>
                     <img
                       src={anthemTrack.coverUrl}
                       alt={anthemTrack.title}
@@ -243,7 +237,7 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
                 </div>
 
                 <button
-                  onClick={() => onPlayTrack(anthemTrack)}
+                  onClick={() => onPlayTrack(anthemTrack, allTracks)}
                   className={`w-10 h-10 rounded-full flex items-center justify-center transition-all ${
                     isAnthemPlaying 
                       ? 'bg-pink-500 text-white shadow-lg shadow-pink-500/50 animate-pulse' 

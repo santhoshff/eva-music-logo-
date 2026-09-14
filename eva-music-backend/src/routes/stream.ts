@@ -17,8 +17,7 @@ export async function streamRoutes(fastify: FastifyInstance) {
       let streamUrl = await getStreamUrl(trackId);
 
       if (!streamUrl) {
-        // Safe guaranteed full-length 320kbps master stream fallback
-        streamUrl = 'https://aac.saavncdn.com/525/fe0acac4728484d5c85bfc2e51d8d165_320.mp4';
+        return reply.code(404).send({ error: 'Audio stream unavailable for this track' });
       }
 
       reply.header('Access-Control-Allow-Origin', '*');

@@ -7,7 +7,7 @@ import { SmoothInput } from './SmoothInput';
 interface DiscoverScreenProps {
   categories?: GenreCategory[];
   tracks: Track[];
-  onPlayTrack: (track: Track) => void;
+  onPlayTrack: (track: Track, queue?: Track[]) => void;
   onSelectCategory?: (cat: GenreCategory) => void;
 }
 
@@ -46,7 +46,7 @@ export const DiscoverScreen: React.FC<DiscoverScreenProps> = ({
       const chosenTrack = tracks[randomIndex];
       setIsSpinning(false);
       if (chosenTrack) {
-        onPlayTrack(chosenTrack);
+        onPlayTrack(chosenTrack, tracks);
       }
     }, 600);
   };
@@ -99,7 +99,7 @@ export const DiscoverScreen: React.FC<DiscoverScreenProps> = ({
               {displayedResults.map((track) => (
                 <div
                   key={track.id}
-                  onClick={() => onPlayTrack(track)}
+                  onClick={() => onPlayTrack(track, displayedResults)}
                   className="flex items-center gap-3 p-2.5 rounded-2xl bg-white/70 backdrop-blur-xl border border-white/80 hover:bg-white transition-all cursor-pointer group shadow-2xs"
                 >
                   <img
