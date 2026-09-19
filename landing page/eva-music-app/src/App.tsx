@@ -4,7 +4,7 @@ import { HomeScreen } from './components/HomeScreen';
 import { DiscoverScreen } from './components/DiscoverScreen';
 import { LibraryScreen } from './components/LibraryScreen';
 import { SettingsScreen } from './components/SettingsScreen';
-import { MiniPlayer } from './components/MiniPlayer';
+import { MediaNotificationBar } from './components/MediaNotificationBar';
 import { BottomNav } from './components/BottomNav';
 import { FullPlayerModal } from './components/FullPlayerModal';
 import { ArtistDetailModal } from './components/ArtistDetailModal';
@@ -743,14 +743,16 @@ export default function App() {
           )}
         </main>
 
-        {/* Floating Mini Player (Always visible when a track is loaded) */}
-        <MiniPlayer
+        {/* Premium In-App Playback Notification Bar */}
+        <MediaNotificationBar
           currentTrack={currentTrack}
           isPlaying={playerState.isPlaying}
           currentTime={playerState.currentTime}
           duration={playerState.duration}
           onTogglePlay={handleTogglePlay}
           onNextTrack={handleNextTrack}
+          onPrevTrack={handlePrevTrack}
+          onSeek={(secs) => audioEngine.seek(secs)}
           onToggleLike={handleToggleLike}
           onOpenFullPlayer={() => setIsFullPlayerOpen(true)}
         />
