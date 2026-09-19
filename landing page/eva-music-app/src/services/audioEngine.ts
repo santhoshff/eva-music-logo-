@@ -30,6 +30,14 @@ class AudioEngine {
   private currentRequestId = 0;
 
   private isEndedHandled = false;
+  private mediaCallbacks: {
+    onNext?: () => void;
+    onPrev?: () => void;
+    onTogglePlay?: () => void;
+    onSeek?: (secs: number) => void;
+  } = {};
+  private currentMediaTrack: { title: string; artist: string; album?: string; coverUrl?: string } | null = null;
+  private lastPositionSyncTime = 0;
 
   constructor() {
     if (typeof window !== 'undefined') {
@@ -48,6 +56,8 @@ class AudioEngine {
       this.isPlaying = true;
       this.isLoading = false;
       this.hasPlaybackError = false;
+      this.syncPlaybackState('playing');
+      this.updatePositionState(true);
       this.notify();
     });
 
@@ -55,11 +65,15 @@ class AudioEngine {
       this.isPlaying = true;
       this.isLoading = false;
       this.hasPlaybackError = false;
+      this.syncPlaybackState('playing');
+      this.updatePositionState(true);
       this.notify();
     });
 
     this.audio.addEventListener('pause', () => {
       this.isPlaying = false;
+      this.syncPlaybackState('paused');
+      this.updatePositionState(true);
       this.notify();
     });
 
@@ -73,6 +87,7 @@ class AudioEngine {
       this.hasPlaybackError = false;
       if (this.audio && this.audio.duration && !Number.isNaN(this.audio.duration)) {
         this.duration = this.audio.duration;
+        this.updatePositionState(true);
       }
       this.notify();
     });
@@ -80,6 +95,7 @@ class AudioEngine {
     this.audio.addEventListener('durationchange', () => {
       if (this.audio && this.audio.duration && !Number.isNaN(this.audio.duration) && this.audio.duration > 0) {
         this.duration = this.audio.duration;
+        this.updatePositionState(true);
         this.notify();
       }
     });
@@ -87,11 +103,13 @@ class AudioEngine {
     this.audio.addEventListener('timeupdate', () => {
       if (this.audio && !Number.isNaN(this.audio.currentTime)) {
         this.currentTime = this.audio.currentTime;
+        this.updatePositionState(false);
         this.notify();
       }
     });
 
     this.audio.addEventListener('ended', () => {
+      this.syncPlaybackState('paused');
       this.handleTrackEnded();
     });
 
@@ -128,6 +146,7 @@ class AudioEngine {
       this.isLoading = false;
       this.isPlaying = false;
       this.hasPlaybackError = true;
+      this.syncPlaybackState('paused');
       this.notify();
     });
   }
@@ -372,17 +391,40 @@ class AudioEngine {
     this.notify();
   }
 
+  public play() {
+    this.initAudioElement();
+    if (!this.audio) return;
+    if (!this.isPlaying) {
+      this.audio.play().then(() => {
+        this.isPlaying = true;
+        this.syncPlaybackState('playing');
+        this.updatePositionState(true);
+        this.notify();
+      }).catch(e => console.warn('[AudioEngine] Play error:', e));
+    }
+  }
+
+  public pause() {
+    if (this.audio && this.isPlaying) {
+      this.audio.pause();
+      this.isPlaying = false;
+      this.syncPlaybackState('paused');
+      this.updatePositionState(true);
+      this.notify();
+    }
+  }
+
   public togglePlay() {
     this.initAudioElement();
     if (!this.audio) return;
 
     if (this.isPlaying) {
-      this.audio.pause();
+      this.pause();
     } else {
       if (!this.audio.src && this.currentTrackId) {
         this.playTrack(this.currentTrackId, this.rawAudioUrl, this.duration);
       } else {
-        this.audio.play().catch(e => console.warn('[AudioEngine] Toggle play error:', e));
+        this.play();
       }
     }
   }
@@ -396,6 +438,7 @@ class AudioEngine {
         console.warn('[AudioEngine] Seek error:', e);
       }
     }
+    this.updatePositionState(true);
     this.notify();
   }
 
@@ -450,9 +493,63 @@ class AudioEngine {
 
     if (this.onTrackEndCallback) {
       this.onTrackEndCallback();
+    } else if (this.mediaCallbacks.onNext) {
+      this.mediaCallbacks.onNext();
     } else {
       this.isPlaying = false;
+      this.syncPlaybackState('paused');
       this.notify();
+    }
+  }
+
+  private setMediaActionHandler(action: MediaSessionAction, handler: MediaSessionActionHandler | null) {
+    if (typeof navigator === 'undefined' || !('mediaSession' in navigator)) return;
+    try {
+      navigator.mediaSession.setActionHandler(action, handler);
+    } catch {
+      // Ignore unsupported action types on certain platforms
+    }
+  }
+
+  public syncPlaybackState(forcedState?: 'playing' | 'paused' | 'none') {
+    if (typeof navigator === 'undefined' || !('mediaSession' in navigator)) return;
+    try {
+      const state = forcedState || (this.isPlaying ? 'playing' : 'paused');
+      navigator.mediaSession.playbackState = state;
+    } catch (e) {
+      console.warn('[AudioEngine] syncPlaybackState error:', e);
+    }
+  }
+
+  public updatePositionState(force = false) {
+    if (
+      typeof navigator === 'undefined' ||
+      !('mediaSession' in navigator) ||
+      !('setPositionState' in navigator.mediaSession)
+    ) {
+      return;
+    }
+
+    const now = Date.now();
+    if (!force && now - this.lastPositionSyncTime < 1000) return;
+    this.lastPositionSyncTime = now;
+
+    try {
+      const duration = this.duration && !Number.isNaN(this.duration) && this.duration > 0 ? this.duration : 0;
+      const position = this.currentTime && !Number.isNaN(this.currentTime) && this.currentTime >= 0
+        ? Math.min(this.currentTime, duration)
+        : 0;
+      const playbackRate = this.audio?.playbackRate || 1;
+
+      if (duration > 0) {
+        navigator.mediaSession.setPositionState({
+          duration,
+          playbackRate,
+          position,
+        });
+      }
+    } catch {
+      // Ignored if position state cannot be applied during track transitions
     }
   }
 
@@ -465,37 +562,105 @@ class AudioEngine {
       onSeek?: (secs: number) => void;
     }
   ) {
+    this.currentMediaTrack = track;
+    if (callbacks) {
+      this.mediaCallbacks = { ...this.mediaCallbacks, ...callbacks };
+    }
+
     if (typeof navigator === 'undefined' || !('mediaSession' in navigator)) return;
 
     try {
+      let fullCoverUrl = track.coverUrl || '';
+      if (
+        fullCoverUrl &&
+        typeof window !== 'undefined' &&
+        !fullCoverUrl.startsWith('http') &&
+        !fullCoverUrl.startsWith('data:')
+      ) {
+        try {
+          fullCoverUrl = new URL(fullCoverUrl, window.location.origin).href;
+        } catch {}
+      }
+
+      const artwork = fullCoverUrl
+        ? [
+            { src: fullCoverUrl, sizes: '96x96', type: 'image/jpeg' },
+            { src: fullCoverUrl, sizes: '128x128', type: 'image/jpeg' },
+            { src: fullCoverUrl, sizes: '192x192', type: 'image/jpeg' },
+            { src: fullCoverUrl, sizes: '256x256', type: 'image/jpeg' },
+            { src: fullCoverUrl, sizes: '384x384', type: 'image/jpeg' },
+            { src: fullCoverUrl, sizes: '512x512', type: 'image/jpeg' },
+          ]
+        : undefined;
+
       navigator.mediaSession.metadata = new MediaMetadata({
         title: track.title,
         artist: track.artist,
         album: track.album || 'EVA AI Music',
-        artwork: track.coverUrl
-          ? [
-              { src: track.coverUrl, sizes: '96x96', type: 'image/jpeg' },
-              { src: track.coverUrl, sizes: '256x256', type: 'image/jpeg' },
-              { src: track.coverUrl, sizes: '512x512', type: 'image/jpeg' },
-            ]
-          : undefined,
+        artwork,
       });
 
-      if (callbacks?.onTogglePlay) {
-        navigator.mediaSession.setActionHandler('play', () => callbacks.onTogglePlay!());
-        navigator.mediaSession.setActionHandler('pause', () => callbacks.onTogglePlay!());
-      }
-      if (callbacks?.onNext) {
-        navigator.mediaSession.setActionHandler('nexttrack', () => callbacks.onNext!());
-      }
-      if (callbacks?.onPrev) {
-        navigator.mediaSession.setActionHandler('previoustrack', () => callbacks.onPrev!());
-      }
-      if (callbacks?.onSeek) {
-        navigator.mediaSession.setActionHandler('seekto', (details) => {
-          if (details.seekTime !== undefined) callbacks.onSeek!(details.seekTime);
-        });
-      }
+      this.syncPlaybackState();
+      this.updatePositionState(true);
+
+      // Register complete suite of action handlers for Android Quick Settings & Bluetooth AVRCP
+      this.setMediaActionHandler('play', () => {
+        console.log('[AudioEngine] MediaSession play event received');
+        if (this.mediaCallbacks.onTogglePlay) {
+          this.mediaCallbacks.onTogglePlay();
+        } else {
+          this.play();
+        }
+      });
+
+      this.setMediaActionHandler('pause', () => {
+        console.log('[AudioEngine] MediaSession pause event received');
+        if (this.mediaCallbacks.onTogglePlay) {
+          this.mediaCallbacks.onTogglePlay();
+        } else {
+          this.pause();
+        }
+      });
+
+      this.setMediaActionHandler('nexttrack', () => {
+        console.log('[AudioEngine] MediaSession nexttrack event received (Bluetooth / Android Notification)');
+        if (this.mediaCallbacks.onNext) {
+          this.mediaCallbacks.onNext();
+        }
+      });
+
+      this.setMediaActionHandler('previoustrack', () => {
+        console.log('[AudioEngine] MediaSession previoustrack event received (Bluetooth / Android Notification)');
+        if (this.mediaCallbacks.onPrev) {
+          this.mediaCallbacks.onPrev();
+        }
+      });
+
+      this.setMediaActionHandler('seekto', (details) => {
+        if (details.seekTime !== undefined && !Number.isNaN(details.seekTime)) {
+          if (this.mediaCallbacks.onSeek) {
+            this.mediaCallbacks.onSeek(details.seekTime);
+          } else {
+            this.seek(details.seekTime);
+          }
+        }
+      });
+
+      this.setMediaActionHandler('seekbackward', (details) => {
+        const skipSecs = details.seekOffset || 10;
+        this.seek(Math.max(0, this.currentTime - skipSecs));
+      });
+
+      this.setMediaActionHandler('seekforward', (details) => {
+        const skipSecs = details.seekOffset || 10;
+        this.seek(Math.min(this.duration, this.currentTime + skipSecs));
+      });
+
+      this.setMediaActionHandler('stop', () => {
+        this.pause();
+        this.seek(0);
+        this.syncPlaybackState('none');
+      });
     } catch (e) {
       console.warn('[AudioEngine] MediaSession error:', e);
     }

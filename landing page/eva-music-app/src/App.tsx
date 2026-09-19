@@ -160,6 +160,20 @@ export default function App() {
   const [tracks, setTracks] = useState<Track[]>(() => ensureFullLengthTracks(getRandomizedTracks()).map(t => ({ ...t, isLiked: false })));
   const [playbackQueue, setPlaybackQueue] = useState<Track[]>(() => ensureFullLengthTracks(INITIAL_TRACKS));
   const handleNextTrackRef = useRef<() => void>(() => {});
+  const handlePrevTrackRef = useRef<() => void>(() => {});
+  const tracksRef = useRef<Track[]>(tracks);
+  const playbackQueueRef = useRef<Track[]>(playbackQueue);
+  const currentTrackIdRef = useRef<string | null>(INITIAL_TRACKS[0].id);
+  const lastPrevPressRef = useRef<number>(0);
+
+  useEffect(() => {
+    tracksRef.current = tracks;
+  }, [tracks]);
+
+  useEffect(() => {
+    playbackQueueRef.current = playbackQueue;
+  }, [playbackQueue]);
+
   const [artists, setArtists] = useState<Artist[]>(POPULAR_ARTISTS);
   const [playlists] = useState<Playlist[]>(FEATURED_PLAYLISTS);
   const [categories] = useState<GenreCategory[]>(GENRE_CATEGORIES);
@@ -178,6 +192,10 @@ export default function App() {
   // Active Audio State
   const [currentTrackId, setCurrentTrackId] = useState<string | null>(INITIAL_TRACKS[0].id);
   const [playerState, setPlayerState] = useState(audioEngine.getState());
+
+  useEffect(() => {
+    currentTrackIdRef.current = currentTrackId;
+  }, [currentTrackId]);
 
   // Helper: Retrieve currently active liked IDs across storage
   const getActiveLikedIds = (email?: string, id?: string): string[] => {
@@ -423,7 +441,7 @@ export default function App() {
       { title: track.title, artist: track.artist, album: track.genre, coverUrl: track.coverUrl },
       {
         onNext: () => handleNextTrackRef.current(),
-        onPrev: () => handlePrevTrack(),
+        onPrev: () => handlePrevTrackRef.current(),
         onTogglePlay: () => audioEngine.togglePlay(),
         onSeek: (secs) => audioEngine.seek(secs),
       }
@@ -435,11 +453,14 @@ export default function App() {
   };
 
   const handleNextTrack = () => {
-    const queue = (playbackQueue && playbackQueue.length > 0) ? playbackQueue : tracks;
-    if (queue.length === 0) return;
+    const queue = (playbackQueueRef.current && playbackQueueRef.current.length > 0)
+      ? playbackQueueRef.current
+      : tracksRef.current;
+    if (!queue || queue.length === 0) return;
 
     const isShuffle = audioEngine.getState().isShuffle;
-    const currentIndex = queue.findIndex(t => t.id === currentTrackId);
+    const currentId = audioEngine.getState().currentTrackId || currentTrackIdRef.current || currentTrackId;
+    const currentIndex = queue.findIndex(t => t.id === currentId);
     let nextIndex = 0;
 
     if (isShuffle && queue.length > 1) {
@@ -455,7 +476,7 @@ export default function App() {
         nextIndex = 0;
       } else {
         // Auto-advance to a smart recommendation from catalog
-        const nextTrack = tracks.find(t => t.id !== currentTrackId && !queue.some(q => q.id === t.id)) || tracks[0];
+        const nextTrack = tracksRef.current.find(t => t.id !== currentId && !queue.some(q => q.id === t.id)) || tracksRef.current[0];
         if (nextTrack) {
           handlePlayTrack(nextTrack, [...queue, nextTrack]);
           return;
@@ -468,22 +489,34 @@ export default function App() {
   };
 
   const handlePrevTrack = () => {
-    const queue = (playbackQueue && playbackQueue.length > 0) ? playbackQueue : tracks;
-    if (queue.length === 0) return;
+    const queue = (playbackQueueRef.current && playbackQueueRef.current.length > 0)
+      ? playbackQueueRef.current
+      : tracksRef.current;
+    if (!queue || queue.length === 0) return;
 
-    // If song played > 3 seconds, seek back to 0:00 (standard Spotify / Echo Music behavior)
-    if (playerState.currentTime > 3) {
+    const now = Date.now();
+    const timeSinceLast = now - lastPrevPressRef.current;
+    lastPrevPressRef.current = now;
+
+    const currentTime = audioEngine.getState().currentTime;
+    const currentId = audioEngine.getState().currentTrackId || currentTrackIdRef.current || currentTrackId;
+    const currentIndex = queue.findIndex(t => t.id === currentId);
+
+    // Standard Spotify / Apple Music / Bluetooth behavior:
+    // If pressed within 2.5s of previous press OR within the first 3 seconds of the track:
+    // navigate to the previous song.
+    // Otherwise, rewind to start of current song (0:00).
+    if (timeSinceLast < 2500 || currentTime <= 3) {
+      const prevIndex = (currentIndex - 1 + queue.length) % queue.length;
+      handlePlayTrack(queue[prevIndex], queue);
+    } else {
       audioEngine.seek(0);
-      return;
     }
-
-    const currentIndex = queue.findIndex(t => t.id === currentTrackId);
-    const prevIndex = (currentIndex - 1 + queue.length) % queue.length;
-    handlePlayTrack(queue[prevIndex], queue);
   };
 
-  // Keep ref synchronized across renders
+  // Keep refs synchronized across renders for background & Bluetooth handlers
   handleNextTrackRef.current = handleNextTrack;
+  handlePrevTrackRef.current = handlePrevTrack;
 
   // Wire automatic track progression on song finish (never drops callback)
   useEffect(() => {
@@ -492,6 +525,32 @@ export default function App() {
       handleNextTrackRef.current();
     });
     return () => audioEngine.setOnTrackEnd(null);
+  }, []);
+
+  // Hardware / Bluetooth keyboard media keys listener (MediaTrackNext, MediaTrackPrevious, MediaPlayPause)
+  useEffect(() => {
+    const handleHardwareMediaKey = (e: KeyboardEvent) => {
+      if (e.key === 'MediaTrackNext' || e.code === 'MediaTrackNext') {
+        e.preventDefault();
+        console.log('[App] Hardware/Bluetooth MediaTrackNext received');
+        handleNextTrackRef.current();
+      } else if (e.key === 'MediaTrackPrevious' || e.code === 'MediaTrackPrevious') {
+        e.preventDefault();
+        console.log('[App] Hardware/Bluetooth MediaTrackPrevious received');
+        handlePrevTrackRef.current();
+      } else if (e.key === 'MediaPlayPause' || e.code === 'MediaPlayPause') {
+        e.preventDefault();
+        console.log('[App] Hardware/Bluetooth MediaPlayPause received');
+        audioEngine.togglePlay();
+      } else if (e.key === 'MediaStop' || e.code === 'MediaStop') {
+        e.preventDefault();
+        console.log('[App] Hardware/Bluetooth MediaStop received');
+        audioEngine.pause();
+      }
+    };
+
+    window.addEventListener('keydown', handleHardwareMediaKey);
+    return () => window.removeEventListener('keydown', handleHardwareMediaKey);
   }, []);
 
   const handleToggleLike = (trackId: string) => {
