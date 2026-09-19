@@ -28,7 +28,8 @@ class AudioEngine {
   private currentFallbackUrl: string | null = null;
   private hasPlaybackError: boolean = false;
   private currentRequestId = 0;
-  private pendingResumeCleanup: (() => void) | null = null;
+  private isAudioUnlocked = false;
+  private pendingResumeClick: (() => void) | null = null;
 
   private isEndedHandled = false;
   private mediaCallbacks: {
@@ -43,6 +44,22 @@ class AudioEngine {
   constructor() {
     if (typeof window !== 'undefined') {
       this.initAudioElement();
+      // Pre-unlock audio on FIRST user gesture so subsequent play() calls never need gesture
+      const unlockOnGesture = () => {
+        if (this.isAudioUnlocked) return;
+        this.isAudioUnlocked = true;
+        window.removeEventListener('touchstart', unlockOnGesture, true);
+        window.removeEventListener('click', unlockOnGesture, true);
+        // Briefly play+pause to unlock audio context for iOS Safari
+        if (this.audio && !this.isPlaying) {
+          const silentPlay = this.audio.play();
+          if (silentPlay) silentPlay.then(() => {
+            if (!this.isPlaying) this.audio?.pause();
+          }).catch(() => {});
+        }
+      };
+      window.addEventListener('touchstart', unlockOnGesture, { capture: true, passive: true });
+      window.addEventListener('click', unlockOnGesture, { capture: true });
     }
   }
 
@@ -206,10 +223,10 @@ class AudioEngine {
   ) {
     const requestId = ++this.currentRequestId;
 
-    // Cancel any stale autoplay-retry touch listener from a previous track
-    if (this.pendingResumeCleanup) {
-      this.pendingResumeCleanup();
-      this.pendingResumeCleanup = null;
+    // Cancel any stale click-resume listener from a previous track
+    if (this.pendingResumeClick) {
+      window.removeEventListener('click', this.pendingResumeClick);
+      this.pendingResumeClick = null;
     }
 
     this.currentTrackId = trackId;
@@ -298,73 +315,80 @@ class AudioEngine {
     console.log(`[AudioEngine] Playing authentic track #${requestId} [${trackId}]: ${playUrl}`);
 
     try {
-      if (this.audio.src !== playUrl) {
-        this.audio.src = playUrl;
-      } else {
-        this.audio.currentTime = 0;
-      }
+      // Always explicitly pause, reset src and load for reliable cross-browser audio switching.
+      // Skipping this causes iOS Safari / mobile Chrome to keep playing the old stream.
+      this.audio.pause();
+      this.audio.src = playUrl;
+      this.audio.currentTime = 0;
+      this.audio.load(); // Forces browser to start loading the new source immediately
+
+      const onPlaySuccess = () => {
+        if (requestId !== this.currentRequestId) return;
+        this.isPlaying = true;
+        this.isLoading = false;
+        this.syncPlaybackState('playing');
+        this.updatePositionState(true);
+        this.notify();
+      };
 
       const attemptPlay = () => {
         if (requestId !== this.currentRequestId || !this.audio) return;
         const playPromise = this.audio.play();
         if (playPromise !== undefined) {
           playPromise
-            .then(() => {
-              if (requestId !== this.currentRequestId) return;
-              this.isPlaying = true;
-              this.isLoading = false;
-              this.syncPlaybackState('playing');
-              this.updatePositionState(true);
-              this.notify();
-            })
+            .then(onPlaySuccess)
             .catch(err => {
               if (requestId !== this.currentRequestId) return;
+
+              // AbortError: browser aborted play because src just changed - wait for canplay
               if (err.name === 'AbortError' || err.name === 'NotSupportedError') {
-                const onCanPlay = () => {
+                console.log('[AudioEngine] AbortError - waiting for canplay to retry play');
+                this.audio?.addEventListener('canplay', () => {
                   if (requestId === this.currentRequestId && this.audio) {
-                    this.audio.play().then(() => {
-                      this.isPlaying = true;
-                      this.isLoading = false;
-                      this.syncPlaybackState('playing');
-                      this.updatePositionState(true);
-                      this.notify();
-                    }).catch(() => {});
+                    this.audio.play().then(onPlaySuccess).catch(() => {});
                   }
-                };
-                this.audio?.addEventListener('canplay', onCanPlay, { once: true });
+                }, { once: true });
                 return;
               }
 
-              console.warn(`[AudioEngine] Autoplay prevented:`, err.message);
-              const resumeOnTouch = () => {
-                // Only resume if this request is still the active one
+              // NotAllowedError: Autoplay blocked. Register a ONE-TIME click handler
+              // (NOT touchstart - touchstart fires before click and would consume the
+              // user gesture before the button's click handler runs, causing the old song
+              // to resume instead of the new one).
+              console.warn(`[AudioEngine] Autoplay blocked, waiting for next click to resume:`, err.message);
+              const resumeOnClick = () => {
                 if (this.audio && requestId === this.currentRequestId) {
-                  this.audio.play().then(() => {
-                    this.isPlaying = true;
-                    this.isLoading = false;
-                    this.notify();
-                  }).catch(() => {});
+                  this.audio.play().then(onPlaySuccess).catch(() => {});
                 }
-                window.removeEventListener('click', resumeOnTouch);
-                window.removeEventListener('touchstart', resumeOnTouch);
-                if (this.pendingResumeCleanup === cleanup) {
-                  this.pendingResumeCleanup = null;
+                if (this.pendingResumeClick === resumeOnClick) {
+                  this.pendingResumeClick = null;
                 }
               };
-              const cleanup = () => {
-                window.removeEventListener('click', resumeOnTouch);
-                window.removeEventListener('touchstart', resumeOnTouch);
-              };
-              this.pendingResumeCleanup = cleanup;
-              window.addEventListener('click', resumeOnTouch, { once: true });
-              window.addEventListener('touchstart', resumeOnTouch, { once: true });
+              // Cancel any previous resume handler before registering new one
+              if (this.pendingResumeClick) {
+                window.removeEventListener('click', this.pendingResumeClick);
+              }
+              this.pendingResumeClick = resumeOnClick;
+              window.addEventListener('click', resumeOnClick, { once: true });
               this.isLoading = false;
               this.notify();
             });
         }
       };
 
-      attemptPlay();
+      // Attempt play immediately (within user gesture context).
+      // If audio is already unlocked (pre-unlocked on first gesture), this always succeeds.
+      // If audio is NOT unlocked, wait for canplay to improve chances of success.
+      if (this.isAudioUnlocked) {
+        attemptPlay();
+      } else {
+        // Not yet unlocked: defer until canplay to maximize play() success rate
+        this.audio.addEventListener('canplay', () => {
+          if (requestId === this.currentRequestId) attemptPlay();
+        }, { once: true });
+        // Also try immediately in case we are within a user gesture
+        attemptPlay();
+      }
     } catch (err) {
       console.error('[AudioEngine] Play execution error:', err);
       this.isLoading = false;
