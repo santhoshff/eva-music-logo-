@@ -48,9 +48,15 @@ class AudioEngine {
   private initAudioElement() {
     if (this.audio) return;
     this.audio = new Audio();
+    this.audio.id = 'eva-music-native-audio';
     this.audio.preload = 'auto';
     this.audio.volume = this.volume;
     this.audio.muted = this.isMuted;
+
+    if (typeof document !== 'undefined' && document.body && !document.getElementById('eva-music-native-audio')) {
+      this.audio.style.display = 'none';
+      document.body.appendChild(this.audio);
+    }
 
     this.audio.addEventListener('play', () => {
       this.isPlaying = true;
@@ -172,10 +178,6 @@ class AudioEngine {
     });
   }
 
-  /**
-   * Transforms direct audio URLs into high-speed, CORS-free, seekable stream proxy URLs.
-   * Eliminates 30-second buffer stalls and CDN IP blocks in web/mobile environments.
-   */
   public getEffectiveStreamUrl(rawUrl: string): string {
     if (!rawUrl) return '';
     const trimmed = rawUrl.trim();
@@ -188,18 +190,7 @@ class AudioEngine {
     ) {
       return '';
     }
-    // If already proxied, return as-is
-    if (trimmed.includes('/api/stream')) {
-      return trimmed;
-    }
-    const isBrowser = typeof window !== 'undefined';
-    const isDeployed = isBrowser && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
-
-    // In web/deployed environments, always stream JioSaavn tracks through our serverless stream proxy
-    // This completely prevents cross-origin CDN referer blocks, network connection drops and 30-second buffer stalls!
-    if (isDeployed && trimmed.includes('saavncdn.com')) {
-      return `/api/stream?url=${encodeURIComponent(trimmed)}`;
-    }
+    // Return authentic high-fidelity stream directly
     return trimmed;
   }
 
@@ -314,6 +305,8 @@ class AudioEngine {
               if (requestId !== this.currentRequestId) return;
               this.isPlaying = true;
               this.isLoading = false;
+              this.syncPlaybackState('playing');
+              this.updatePositionState(true);
               this.notify();
             })
             .catch(err => {
@@ -324,6 +317,8 @@ class AudioEngine {
                     this.audio.play().then(() => {
                       this.isPlaying = true;
                       this.isLoading = false;
+                      this.syncPlaybackState('playing');
+                      this.updatePositionState(true);
                       this.notify();
                     }).catch(() => {});
                   }
@@ -584,12 +579,12 @@ class AudioEngine {
 
       const artwork = fullCoverUrl
         ? [
-            { src: fullCoverUrl, sizes: '96x96', type: 'image/jpeg' },
-            { src: fullCoverUrl, sizes: '128x128', type: 'image/jpeg' },
-            { src: fullCoverUrl, sizes: '192x192', type: 'image/jpeg' },
-            { src: fullCoverUrl, sizes: '256x256', type: 'image/jpeg' },
-            { src: fullCoverUrl, sizes: '384x384', type: 'image/jpeg' },
-            { src: fullCoverUrl, sizes: '512x512', type: 'image/jpeg' },
+            { src: fullCoverUrl, sizes: '96x96' },
+            { src: fullCoverUrl, sizes: '128x128' },
+            { src: fullCoverUrl, sizes: '192x192' },
+            { src: fullCoverUrl, sizes: '256x256' },
+            { src: fullCoverUrl, sizes: '384x384' },
+            { src: fullCoverUrl, sizes: '512x512' },
           ]
         : undefined;
 

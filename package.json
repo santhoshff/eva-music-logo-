@@ -1,0 +1,17 @@
+{
+  "name": "eva-music-workspace",
+  "private": true,
+  "workspaces": [
+    "landing page/eva-music-app",
+    "landing page/eva-music-backend"
+  ],
+  "scripts": {
+    "dev": "npm run dev --workspace=\"landing page/eva-music-app\"",
+    "build": "npm run build --workspace=\"landing page/eva-music-app\"",
+    "build:frontend": "npm run build --workspace=\"landing page/eva-music-app\"",
+    "lint:frontend": "npm run lint --workspace=\"landing page/eva-music-app\""
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.4"
+  }
+}
