@@ -28,6 +28,7 @@ class AudioEngine {
   private currentFallbackUrl: string | null = null;
   private hasPlaybackError: boolean = false;
   private currentRequestId = 0;
+  private pendingResumeCleanup: (() => void) | null = null;
 
   private isEndedHandled = false;
   private mediaCallbacks: {
@@ -204,6 +205,13 @@ class AudioEngine {
     trackArtist?: string
   ) {
     const requestId = ++this.currentRequestId;
+
+    // Cancel any stale autoplay-retry touch listener from a previous track
+    if (this.pendingResumeCleanup) {
+      this.pendingResumeCleanup();
+      this.pendingResumeCleanup = null;
+    }
+
     this.currentTrackId = trackId;
     this.currentTime = 0;
     this.duration = durationSeconds > 0 ? durationSeconds : 218;
@@ -329,7 +337,8 @@ class AudioEngine {
 
               console.warn(`[AudioEngine] Autoplay prevented:`, err.message);
               const resumeOnTouch = () => {
-                if (this.audio && this.currentTrackId === trackId) {
+                // Only resume if this request is still the active one
+                if (this.audio && requestId === this.currentRequestId) {
                   this.audio.play().then(() => {
                     this.isPlaying = true;
                     this.isLoading = false;
@@ -338,7 +347,15 @@ class AudioEngine {
                 }
                 window.removeEventListener('click', resumeOnTouch);
                 window.removeEventListener('touchstart', resumeOnTouch);
+                if (this.pendingResumeCleanup === cleanup) {
+                  this.pendingResumeCleanup = null;
+                }
               };
+              const cleanup = () => {
+                window.removeEventListener('click', resumeOnTouch);
+                window.removeEventListener('touchstart', resumeOnTouch);
+              };
+              this.pendingResumeCleanup = cleanup;
               window.addEventListener('click', resumeOnTouch, { once: true });
               window.addEventListener('touchstart', resumeOnTouch, { once: true });
               this.isLoading = false;
