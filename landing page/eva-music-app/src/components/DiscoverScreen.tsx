@@ -67,40 +67,40 @@ export const DiscoverScreen: React.FC<DiscoverScreenProps> = ({
         value={searchQuery}
         onChange={(e) => setSearchQuery(e.target.value)}
         placeholder="Search songs, artists, or lyrics..."
-        icon={<Search size={18} className="text-slate-400" />}
+        icon={<Search size={18} className="text-slate-400 dark:text-slate-400" />}
         rightElement={
           searchQuery ? (
             <button
               onClick={() => setSearchQuery('')}
-              className="text-xs font-semibold text-purple-600 hover:text-purple-800 cursor-pointer px-2 py-1 rounded-full hover:bg-purple-50 transition-colors"
+              className="text-xs font-semibold text-purple-600 dark:text-purple-400 hover:text-purple-800 dark:hover:text-purple-300 cursor-pointer px-2 py-1 rounded-full hover:bg-purple-50 dark:hover:bg-purple-950/50 transition-colors"
             >
               Clear
             </button>
           ) : null
         }
-        wrapperClassName="rounded-full py-3 px-4 bg-white/80 backdrop-blur-xl border border-white/90 shadow-2xs focus-within:ring-4 focus-within:ring-purple-400/20"
+        wrapperClassName="rounded-full py-3 px-4 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border border-white/90 dark:border-white/10 shadow-2xs focus-within:ring-4 focus-within:ring-purple-400/20"
       />
 
       {/* Search Results overlay if searching */}
       {searchQuery ? (
         <div>
           <div className="flex items-center justify-between mb-3">
-            <h2 className="text-xl font-bold text-slate-900">Search Results</h2>
+            <h2 className="text-xl font-bold text-slate-900 dark:text-white">Search Results</h2>
             {isSearching && (
-              <span className="text-xs font-medium text-purple-600 flex items-center gap-1">
+              <span className="text-xs font-medium text-purple-600 dark:text-purple-400 flex items-center gap-1">
                 <Loader2 size={13} className="animate-spin" /> Searching live catalog...
               </span>
             )}
           </div>
           {displayedResults.length === 0 && !isSearching ? (
-            <p className="text-sm text-slate-500 py-8 text-center">No tracks found matching "{searchQuery}"</p>
+            <p className="text-sm text-slate-500 dark:text-slate-400 py-8 text-center">No tracks found matching "{searchQuery}"</p>
           ) : (
             <div className="space-y-2">
               {displayedResults.map((track) => (
                 <div
                   key={track.id}
                   onClick={() => onPlayTrack(track, displayedResults)}
-                  className="flex items-center gap-3 p-2.5 rounded-2xl bg-white/70 backdrop-blur-xl border border-white/80 hover:bg-white transition-all cursor-pointer group shadow-2xs"
+                  className="flex items-center gap-3 p-2.5 rounded-2xl bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl border border-white/80 dark:border-white/10 hover:bg-white dark:hover:bg-slate-800/80 transition-all cursor-pointer group shadow-2xs"
                 >
                   <img
                     src={track.coverUrl}
@@ -109,13 +109,13 @@ export const DiscoverScreen: React.FC<DiscoverScreenProps> = ({
                     onError={(e) => {
                       e.currentTarget.src = 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=600&q=80';
                     }}
-                    className="w-12 h-12 rounded-xl object-cover shadow-2xs bg-slate-100"
+                    className="w-12 h-12 rounded-xl object-cover shadow-2xs bg-slate-100 dark:bg-slate-800"
                   />
                   <div className="flex-1 min-w-0">
-                    <h4 className="font-bold text-sm text-slate-900 truncate">{track.title}</h4>
-                    <p className="text-xs text-slate-500 truncate">{track.artist}</p>
+                    <h4 className="font-bold text-sm text-slate-900 dark:text-white truncate">{track.title}</h4>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 truncate">{track.artist}</p>
                   </div>
-                  <button className="w-8 h-8 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center group-hover:bg-purple-600 group-hover:text-white transition-colors">
+                  <button className="w-8 h-8 rounded-full bg-purple-100 dark:bg-slate-800 text-purple-600 dark:text-purple-300 flex items-center justify-center group-hover:bg-purple-600 group-hover:text-white transition-colors">
                     <Play size={14} className="fill-current ml-0.5" />
                   </button>
                 </div>

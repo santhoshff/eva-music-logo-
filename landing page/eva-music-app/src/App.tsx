@@ -4,7 +4,7 @@ import { HomeScreen } from './components/HomeScreen';
 import { DiscoverScreen } from './components/DiscoverScreen';
 import { LibraryScreen } from './components/LibraryScreen';
 import { SettingsScreen } from './components/SettingsScreen';
-import { MediaNotificationBar } from './components/MediaNotificationBar';
+import { MiniPlayer } from './components/MiniPlayer';
 import { BottomNav } from './components/BottomNav';
 import { FullPlayerModal } from './components/FullPlayerModal';
 import { ArtistDetailModal } from './components/ArtistDetailModal';
@@ -674,12 +674,12 @@ export default function App() {
   };
 
   return (
-    <div className="relative min-h-screen w-full bg-[#fcf8ff] text-slate-900 font-sans selection:bg-purple-200 antialiased overflow-x-hidden">
+    <div className="relative min-h-screen w-full bg-[#fcf8ff] dark:bg-[#0c0a17] text-slate-900 dark:text-slate-100 font-sans selection:bg-purple-200 dark:selection:bg-purple-900 antialiased overflow-x-hidden transition-colors duration-300">
       {/* Ambient Glassmorphism Gradient Background Lights */}
       <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
-        <div className="absolute top-[-10%] left-[-10%] w-[450px] h-[450px] rounded-full bg-gradient-to-br from-purple-300/40 via-fuchsia-200/30 to-transparent blur-3xl" />
-        <div className="absolute top-[20%] right-[-15%] w-[400px] h-[400px] rounded-full bg-gradient-to-bl from-pink-200/40 via-purple-200/30 to-transparent blur-3xl" />
-        <div className="absolute bottom-[-10%] left-[20%] w-[500px] h-[500px] rounded-full bg-gradient-to-tr from-indigo-200/40 via-sky-100/30 to-transparent blur-3xl" />
+        <div className="absolute top-[-10%] left-[-10%] w-[450px] h-[450px] rounded-full bg-gradient-to-br from-purple-300/40 via-fuchsia-200/30 to-transparent dark:from-purple-900/30 dark:via-fuchsia-950/20 blur-3xl transition-all duration-500" />
+        <div className="absolute top-[20%] right-[-15%] w-[400px] h-[400px] rounded-full bg-gradient-to-bl from-pink-200/40 via-purple-200/30 to-transparent dark:from-pink-900/25 dark:via-purple-950/20 blur-3xl transition-all duration-500" />
+        <div className="absolute bottom-[-10%] left-[20%] w-[500px] h-[500px] rounded-full bg-gradient-to-tr from-indigo-200/40 via-sky-100/30 to-transparent dark:from-indigo-950/40 dark:via-purple-900/20 blur-3xl transition-all duration-500" />
       </div>
 
       {/* Main Container */}
@@ -743,16 +743,14 @@ export default function App() {
           )}
         </main>
 
-        {/* Premium In-App Playback Notification Bar */}
-        <MediaNotificationBar
+        {/* Floating Mini Player (Always visible when a track is loaded) */}
+        <MiniPlayer
           currentTrack={currentTrack}
           isPlaying={playerState.isPlaying}
           currentTime={playerState.currentTime}
           duration={playerState.duration}
           onTogglePlay={handleTogglePlay}
           onNextTrack={handleNextTrack}
-          onPrevTrack={handlePrevTrack}
-          onSeek={(secs) => audioEngine.seek(secs)}
           onToggleLike={handleToggleLike}
           onOpenFullPlayer={() => setIsFullPlayerOpen(true)}
         />

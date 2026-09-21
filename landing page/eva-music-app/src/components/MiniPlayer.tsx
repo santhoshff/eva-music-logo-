@@ -40,7 +40,7 @@ export const MiniPlayer: React.FC<MiniPlayerProps> = ({
       <motion.div layout className="relative flex items-center justify-center">
         <motion.div
           className={cn(
-            "relative flex items-center justify-between overflow-hidden rounded-full shadow-xl shadow-purple-900/10 backdrop-blur-2xl border border-white/90 bg-white/92",
+            "relative flex items-center justify-between overflow-hidden rounded-full shadow-xl shadow-purple-900/10 dark:shadow-black/60 backdrop-blur-2xl border border-white/90 dark:border-white/10 bg-white/92 dark:bg-slate-900/92",
             "h-16 transition-colors select-none"
           )}
           style={{ borderRadius: 9999 }}
@@ -50,7 +50,7 @@ export const MiniPlayer: React.FC<MiniPlayerProps> = ({
         >
           {/* Top Slim Scrubber Progress Line */}
           {isExpanded && (
-            <div className="absolute top-0 left-0 right-0 h-1 bg-slate-100/80">
+            <div className="absolute top-0 left-0 right-0 h-1 bg-slate-100/80 dark:bg-slate-800/80">
               <div
                 className="h-full bg-gradient-to-r from-purple-500 via-indigo-500 to-pink-500 transition-all duration-300"
                 style={{ width: `${progressPercent}%` }}
@@ -65,7 +65,7 @@ export const MiniPlayer: React.FC<MiniPlayerProps> = ({
               className="w-16 h-16 rounded-full flex items-center justify-center cursor-pointer relative group p-1.5"
               title="Click to expand player"
             >
-              <div className="relative w-full h-full rounded-full overflow-hidden shadow-xs bg-slate-100">
+              <div className="relative w-full h-full rounded-full overflow-hidden shadow-xs bg-slate-100 dark:bg-slate-800">
                 <img
                   src={currentTrack.coverUrl}
                   alt={currentTrack.title}
@@ -99,7 +99,7 @@ export const MiniPlayer: React.FC<MiniPlayerProps> = ({
                 className="flex items-center gap-2.5 h-full w-[260px] pl-3.5 pr-1 cursor-pointer min-w-0"
               >
                 {/* Vinyl Thumbnail */}
-                <div className="relative flex-none w-11 h-11 rounded-full overflow-hidden shadow-xs bg-slate-100 border border-white">
+                <div className="relative flex-none w-11 h-11 rounded-full overflow-hidden shadow-xs bg-slate-100 dark:bg-slate-800 border border-white dark:border-slate-700">
                   <img
                     src={currentTrack.coverUrl}
                     alt={currentTrack.title}
@@ -118,13 +118,13 @@ export const MiniPlayer: React.FC<MiniPlayerProps> = ({
                 {/* Title & Animated Audio Dots/Wave */}
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-1.5">
-                    <h4 className="font-extrabold text-xs text-slate-900 truncate">
+                    <h4 className="font-extrabold text-xs text-slate-900 dark:text-white truncate">
                       {currentTrack.title}
                     </h4>
                   </div>
                   
                   <div className="flex items-center gap-2 mt-0.5">
-                    <p className="text-[11px] font-semibold text-slate-500 truncate">
+                    <p className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 truncate">
                       {currentTrack.artist}
                     </p>
 
@@ -151,7 +151,7 @@ export const MiniPlayer: React.FC<MiniPlayerProps> = ({
                     onToggleLike(currentTrack.id);
                   }}
                   className={`p-1.5 rounded-full transition-colors flex-none ${
-                    currentTrack.isLiked ? 'text-pink-500' : 'text-slate-400 hover:text-slate-600'
+                    currentTrack.isLiked ? 'text-pink-500' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200'
                   }`}
                   aria-label="Like track"
                 >
@@ -182,13 +182,13 @@ export const MiniPlayer: React.FC<MiniPlayerProps> = ({
                   )}
                 </motion.div>
 
-                {/* Next Track */}
+                {/* Next Track Button */}
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
                     onNextTrack();
                   }}
-                  className="p-1.5 rounded-full text-slate-500 hover:text-purple-700 active:scale-95 transition-all cursor-pointer flex-none"
+                  className="p-1.5 rounded-full text-slate-500 dark:text-slate-400 hover:text-purple-700 dark:hover:text-purple-300 active:scale-95 transition-all cursor-pointer flex-none"
                   aria-label="Next track"
                 >
                   <SkipForward size={16} />
@@ -200,7 +200,7 @@ export const MiniPlayer: React.FC<MiniPlayerProps> = ({
                     e.stopPropagation();
                     setIsExpanded(false);
                   }}
-                  className="p-1 text-slate-400 hover:text-slate-700 cursor-pointer transition-colors"
+                  className="p-1 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 cursor-pointer transition-colors"
                   title="Minimize player"
                 >
                   <ChevronRight size={13} />

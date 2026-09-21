@@ -22,12 +22,12 @@ const INPUT_TYPE_OPTIONS = [
 
 const inputWrapperClassName = cn(
   "relative w-full rounded-2xl p-3.5 transition-all",
-  "bg-white/80 backdrop-blur-xl border border-white/90 shadow-sm",
-  "hover:border-purple-300 focus-within:border-purple-500 focus-within:ring-4 focus-within:ring-purple-500/15"
+  "bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border border-white/90 dark:border-white/10 shadow-sm",
+  "hover:border-purple-300 dark:hover:border-purple-500/40 focus-within:border-purple-500 focus-within:ring-4 focus-within:ring-purple-500/15"
 );
 
 const inputClassName =
-  "w-full bg-transparent outline-none placeholder:text-slate-400 text-slate-900 font-semibold text-sm";
+  "w-full bg-transparent outline-none placeholder:text-slate-400 dark:placeholder:text-slate-500 text-slate-900 dark:text-white font-semibold text-sm";
 
 export type InputFieldProps = ComponentPropsWithoutRef<"input"> & {
   wrapperClassName?: string;

@@ -82,9 +82,9 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
       <div>
         <div className="flex items-center justify-between mb-3.5">
           <div className="flex items-center gap-2">
-            <h2 className="text-xl font-bold text-slate-900 tracking-tight">Trending For You</h2>
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-purple-100 text-purple-700 border border-purple-200 shadow-xs">
-              <Sparkles size={11} className="text-purple-600 animate-pulse" />
+            <h2 className="text-xl font-bold text-slate-950 dark:text-white tracking-tight">Trending For You</h2>
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-purple-100 dark:bg-purple-950/70 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800/50 shadow-xs">
+              <Sparkles size={11} className="text-purple-600 dark:text-purple-400 animate-pulse" />
               Eva Brain
             </span>
           </div>
@@ -93,13 +93,13 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
             <button
               onClick={handleRefresh}
               title="Refresh personalized recommendations"
-              className="p-1.5 rounded-full hover:bg-purple-100/80 text-slate-500 hover:text-purple-700 active:scale-95 transition-all cursor-pointer"
+              className="p-1.5 rounded-full hover:bg-purple-100/80 dark:hover:bg-slate-800/80 text-slate-500 dark:text-slate-400 hover:text-purple-700 dark:hover:text-purple-300 active:scale-95 transition-all cursor-pointer"
             >
-              <RotateCcw size={14} className={isRefreshing ? 'animate-spin text-purple-600' : ''} />
+              <RotateCcw size={14} className={isRefreshing ? 'animate-spin text-purple-600 dark:text-purple-400' : ''} />
             </button>
             <button 
               onClick={onNavigateToDiscover}
-              className="text-xs font-semibold text-purple-700 hover:text-purple-900 flex items-center gap-0.5 cursor-pointer"
+              className="text-xs font-semibold text-purple-700 dark:text-purple-400 hover:text-purple-900 dark:hover:text-purple-300 flex items-center gap-0.5 cursor-pointer"
             >
               See all <ChevronRight size={14} />
             </button>
@@ -121,7 +121,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
               return (
                 <motion.div
                   key={track.id}
-                  className="relative cursor-pointer overflow-hidden rounded-3xl shadow-lg border border-white/90 group flex-none"
+                  className="relative cursor-pointer overflow-hidden rounded-3xl shadow-lg border border-white/90 dark:border-white/10 group flex-none"
                   animate={{
                     width: isSelected ? '13.5rem' : '4.2rem',
                     height: '14.5rem',
@@ -140,31 +140,31 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        className="absolute inset-0 z-10 bg-gradient-to-t from-slate-950/95 via-slate-900/50 to-transparent p-3.5 flex flex-col justify-end"
+                        className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent z-10 flex flex-col justify-between p-3.5"
                       >
-                        <div className="space-y-1">
-                          <div className="flex items-center justify-between">
-                            <span className="inline-block px-2 py-0.5 rounded-full bg-purple-500/90 backdrop-blur-md text-[10px] font-bold text-white uppercase tracking-wider">
-                              {isCurrentPlaying ? 'Now Playing' : 'Trending Hit'}
-                            </span>
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                onToggleLike(track.id);
-                              }}
-                              className="p-1 rounded-full bg-black/40 backdrop-blur-md text-white hover:text-pink-400 transition-colors cursor-pointer"
-                            >
-                              <Heart
-                                size={14}
-                                className={track.isLiked ? 'fill-pink-500 text-pink-500' : 'text-white/80'}
-                              />
-                            </button>
-                          </div>
+                        <div className="flex items-center justify-between">
+                          <span className="px-2 py-0.5 rounded-full bg-purple-600/80 backdrop-blur-md text-[10px] font-black tracking-wider text-white uppercase shadow-xs">
+                            Trending Hit
+                          </span>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onToggleLike(track.id);
+                            }}
+                            className="p-1 rounded-full text-white/80 hover:text-pink-400 active:scale-90 transition-transform"
+                          >
+                            <Heart
+                              size={15}
+                              className={track.isLiked ? 'fill-pink-500 text-pink-500' : ''}
+                            />
+                          </button>
+                        </div>
 
-                          <h3 className="font-extrabold text-sm text-white truncate leading-tight mt-1">
+                        <div>
+                          <p className="text-[13px] font-bold text-white line-clamp-1 leading-snug">
                             {track.title}
-                          </h3>
-                          <p className="text-xs font-medium text-slate-300 truncate">
+                          </p>
+                          <p className="text-[11px] font-medium text-white/80 line-clamp-1 mt-0.5">
                             {track.artist}
                           </p>
                           <p className="text-[10px] font-semibold text-purple-300/90 truncate">
@@ -218,8 +218,8 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
               <Mic2 size={15} />
             </div>
             <div>
-              <h2 className="text-lg font-extrabold text-slate-900 tracking-tight">Tamil Singers & Maestros</h2>
-              <p className="text-[11px] font-medium text-slate-500">
+              <h2 className="text-lg font-extrabold text-slate-900 dark:text-white tracking-tight">Tamil Singers & Maestros</h2>
+              <p className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
                 Click any singer to list all famous songs in order
               </p>
             </div>
@@ -245,7 +245,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
                   onError={(e) => {
                     e.currentTarget.src = singer.coverUrl;
                   }}
-                  className="w-full h-full rounded-full object-cover bg-slate-800 border-2 border-white group-hover:brightness-105 transition-all"
+                  className="w-full h-full rounded-full object-cover bg-slate-800 border-2 border-white dark:border-slate-800 group-hover:brightness-105 transition-all"
                 />
                 <span className="absolute bottom-0 right-0 w-4 h-4 rounded-full bg-purple-600 border border-white text-white text-[9px] font-black flex items-center justify-center shadow-xs">
                   ✓
@@ -254,10 +254,10 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
 
               {/* Singer Name */}
               <div className="text-center w-full">
-                <p className="text-xs font-bold text-slate-800 truncate group-hover:text-purple-700 transition-colors">
+                <p className="text-xs font-bold text-slate-800 dark:text-slate-200 truncate group-hover:text-purple-700 dark:group-hover:text-purple-400 transition-colors">
                   {singer.name}
                 </p>
-                <p className="text-[10px] text-purple-600 font-semibold truncate">
+                <p className="text-[10px] text-purple-600 dark:text-purple-400 font-semibold truncate">
                   {singer.monthlyListeners}
                 </p>
               </div>
@@ -275,12 +275,12 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
             </div>
             <div>
               <div className="flex items-center gap-1.5">
-                <h2 className="text-lg font-extrabold text-slate-900 tracking-tight">Newly Released Lineup</h2>
-                <span className="px-1.5 py-0.5 rounded-full text-[9px] font-extrabold bg-rose-100 text-rose-700 uppercase tracking-wide">
+                <h2 className="text-lg font-extrabold text-slate-900 dark:text-white tracking-tight">Newly Released Lineup</h2>
+                <span className="px-1.5 py-0.5 rounded-full text-[9px] font-extrabold bg-rose-100 dark:bg-rose-950/70 text-rose-700 dark:text-rose-300 uppercase tracking-wide border dark:border-rose-900/50">
                   Fresh 2025
                 </span>
               </div>
-              <p className="text-[11px] font-medium text-slate-500">
+              <p className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
                 Latest Tamil chartbusters & movie singles
               </p>
             </div>
@@ -298,10 +298,10 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
                 whileHover={{ y: -3 }}
                 whileTap={{ scale: 0.98 }}
                 onClick={() => onPlayTrack(track, NEW_RELEASES_LINEUP)}
-                className="relative shrink-0 w-38 rounded-2xl bg-white p-2.5 shadow-md hover:shadow-xl border border-slate-100 hover:border-purple-300 transition-all cursor-pointer group flex flex-col"
+                className="relative shrink-0 w-38 rounded-2xl bg-white dark:bg-slate-900/80 p-2.5 shadow-md hover:shadow-xl border border-slate-100 dark:border-white/10 hover:border-purple-300 dark:hover:border-purple-500/40 transition-all cursor-pointer group flex flex-col"
               >
                 {/* Cover Image */}
-                <div className="relative w-full aspect-square rounded-xl overflow-hidden mb-2 bg-slate-100">
+                <div className="relative w-full aspect-square rounded-xl overflow-hidden mb-2 bg-slate-100 dark:bg-slate-800">
                   <img
                     src={track.coverUrl}
                     alt={track.title}
@@ -327,14 +327,14 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
                 </div>
 
                 {/* Track Details */}
-                <h3 className="font-bold text-xs text-slate-900 truncate group-hover:text-purple-700 transition-colors">
+                <h3 className="font-bold text-xs text-slate-900 dark:text-white truncate group-hover:text-purple-700 dark:group-hover:text-purple-400 transition-colors">
                   {track.title}
                 </h3>
-                <p className="text-[11px] font-medium text-slate-500 truncate mt-0.5">
+                <p className="text-[11px] font-medium text-slate-500 dark:text-slate-400 truncate mt-0.5">
                   {track.artist}
                 </p>
-                <div className="flex items-center justify-between mt-2 pt-1 border-t border-slate-100 text-[10px] text-slate-400 font-medium">
-                  <span className="text-purple-600 font-bold">{track.plays || '10M+'}</span>
+                <div className="flex items-center justify-between mt-2 pt-1 border-t border-slate-100 dark:border-slate-800 text-[10px] text-slate-400 dark:text-slate-400 font-medium">
+                  <span className="text-purple-600 dark:text-purple-400 font-bold">{track.plays || '10M+'}</span>
                   <span>{track.duration}</span>
                 </div>
               </motion.div>
@@ -352,12 +352,12 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
             </div>
             <div>
               <div className="flex items-center gap-1.5">
-                <h2 className="text-lg font-extrabold text-slate-900 tracking-tight">Your Top 20 Songs</h2>
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-purple-100 text-purple-700 border border-purple-200">
+                <h2 className="text-lg font-extrabold text-slate-900 dark:text-white tracking-tight">Your Top 20 Songs</h2>
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-purple-100 dark:bg-purple-950/70 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800/50">
                   TOP 20
                 </span>
               </div>
-              <p className="text-[11px] font-medium text-slate-500">
+              <p className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
                 Personalized neural ranking tailored to your taste
               </p>
             </div>
@@ -373,7 +373,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
         </div>
 
         {/* Ranked Top 20 List */}
-        <div className="space-y-2 bg-white/70 backdrop-blur-md p-2.5 rounded-3xl border border-slate-200/80 shadow-xs">
+        <div className="space-y-2 bg-white/70 dark:bg-slate-900/70 backdrop-blur-md p-2.5 rounded-3xl border border-slate-200/80 dark:border-white/10 shadow-xs">
           {userTop20.map((track, index) => {
             const rank = index + 1;
             const isCurrent = currentTrackId === track.id && isPlaying;
@@ -387,8 +387,8 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
                 onClick={() => onPlayTrack(track, userTop20)}
                 className={`flex items-center gap-3 p-2.5 rounded-2xl transition-all cursor-pointer border ${
                   isCurrent
-                    ? 'bg-purple-50 border-purple-300 shadow-sm'
-                    : 'bg-white/80 border-slate-100 hover:bg-purple-50/50 hover:border-purple-200'
+                    ? 'bg-purple-50 dark:bg-purple-950/60 border-purple-300 dark:border-purple-700/60 shadow-sm'
+                    : 'bg-white/80 dark:bg-slate-800/60 border-slate-100 dark:border-slate-700/40 hover:bg-purple-50/50 dark:hover:bg-slate-700/50 hover:border-purple-200 dark:hover:border-purple-500/30'
                 }`}
               >
                 {/* Rank Number Badge */}
@@ -413,7 +413,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
                 </div>
 
                 {/* Album Cover */}
-                <div className="relative w-12 h-12 rounded-xl overflow-hidden shrink-0 bg-slate-100 border border-slate-200">
+                <div className="relative w-12 h-12 rounded-xl overflow-hidden shrink-0 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
                   <img
                     src={track.coverUrl}
                     alt={track.title}
@@ -437,14 +437,14 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
                 {/* Title, Artist & Taste Tag */}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-1.5">
-                    <h4 className={`font-bold text-xs truncate ${isCurrent ? 'text-purple-700' : 'text-slate-900'}`}>
+                    <h4 className={`font-bold text-xs truncate ${isCurrent ? 'text-purple-700 dark:text-purple-300' : 'text-slate-900 dark:text-white'}`}>
                       {track.title}
                     </h4>
                   </div>
-                  <p className="text-[11px] font-medium text-slate-500 truncate mt-0.5">
+                  <p className="text-[11px] font-medium text-slate-500 dark:text-slate-400 truncate mt-0.5">
                     {track.artist}
                   </p>
-                  <span className="inline-block mt-0.5 px-1.5 py-0.2 rounded-md bg-purple-100/70 text-[9px] font-bold text-purple-700 truncate max-w-full">
+                  <span className="inline-block mt-0.5 px-1.5 py-0.2 rounded-md bg-purple-100/70 dark:bg-purple-950/70 text-[9px] font-bold text-purple-700 dark:text-purple-300 truncate max-w-full">
                     {tasteTag}
                   </span>
                 </div>
@@ -452,7 +452,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
                 {/* Plays & Actions */}
                 <div className="flex items-center gap-2 shrink-0">
                   <div className="text-right hidden sm:block">
-                    <p className="text-[11px] font-bold text-slate-700">{track.plays}</p>
+                    <p className="text-[11px] font-bold text-slate-700 dark:text-slate-300">{track.plays}</p>
                     <p className="text-[10px] text-slate-400 font-medium">{track.duration}</p>
                   </div>
 
@@ -461,7 +461,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
                       e.stopPropagation();
                       onToggleLike(track.id);
                     }}
-                    className="p-1.5 rounded-full hover:bg-slate-100 text-slate-400 hover:text-pink-500 transition-colors cursor-pointer"
+                    className="p-1.5 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-400 hover:text-pink-500 transition-colors cursor-pointer"
                   >
                     <Heart
                       size={15}
@@ -477,7 +477,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
                     className={`w-8 h-8 rounded-full flex items-center justify-center transition-all cursor-pointer ${
                       isCurrent
                         ? 'bg-purple-600 text-white shadow-md shadow-purple-500/30'
-                        : 'bg-purple-100 text-purple-700 hover:bg-purple-600 hover:text-white'
+                        : 'bg-purple-100 dark:bg-slate-800 text-purple-700 dark:text-purple-300 hover:bg-purple-600 hover:text-white'
                     }`}
                   >
                     {isCurrent ? <Pause size={13} className="fill-current" /> : <Play size={13} className="fill-current ml-0.5" />}
