@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { Search, Heart, Sparkles } from 'lucide-react';
-import { ThemeToggleButton, Options, AnimationVariant, AnimationStart } from './Skiper26';
+import { Search, Heart, Sparkles, Sun, Moon } from 'lucide-react';
+import { useTheme } from 'next-themes';
 
 interface HeaderProps {
   userName?: string;
@@ -21,14 +21,12 @@ export const Header: React.FC<HeaderProps> = ({
   title,
   subtitle
 }) => {
-  const [showOptions, setShowOptions] = useState(false);
-  const [variant, setVariant] = useState<AnimationVariant>('circle');
-  const [start, setStart] = useState<AnimationStart>('top-right');
-  const [blur, setBlur] = useState<boolean>(false);
-  const [gifType, setGifType] = useState<'1' | '2' | '3' | 'custom'>('1');
-  const [gifUrl, setGifUrl] = useState<string>(
-    'https://media.giphy.com/media/KBbr4hHl9DSahKvInO/giphy.gif?cid=790b76112m5eeeydoe7et0cr3j3ekb1erunxozyshuhxx2vl&ep=v1_stickers_search&rid=giphy.gif&ct=s',
-  );
+  const { resolvedTheme, setTheme } = useTheme();
+  const isDark = resolvedTheme === 'dark';
+
+  const toggleTheme = () => {
+    setTheme(isDark ? 'light' : 'dark');
+  };
 
   return (
     <header className="relative flex items-center justify-between px-6 pt-6 pb-4 w-full max-w-md mx-auto">
@@ -83,42 +81,18 @@ export const Header: React.FC<HeaderProps> = ({
           </button>
         )}
 
-        {/* Theme Toggle Button from Skiper26 */}
-        <div
-          className="relative inline-flex"
-          onContextMenu={(e) => {
-            e.preventDefault();
-            setShowOptions((prev) => !prev);
-          }}
-          title="Toggle theme (Right-click for animation styles)"
+        {/* Simple, reliable Dark/Light theme toggle */}
+        <button
+          onClick={toggleTheme}
+          className="w-10 h-10 rounded-full backdrop-blur-md border shadow-sm flex items-center justify-center transition-all duration-300 active:scale-95
+            bg-slate-900 border-slate-700 text-yellow-300
+            dark:bg-amber-400 dark:border-amber-300 dark:text-slate-900"
+          aria-label="Toggle dark mode"
+          title={isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
         >
-          <ThemeToggleButton
-            variant={variant}
-            start={start}
-            blur={blur}
-            gifUrl={gifUrl}
-            className="size-10 shadow-xs"
-          />
-        </div>
+          {isDark ? <Sun size={18} /> : <Moon size={18} />}
+        </button>
       </div>
-
-      {/* Optional draggable animation options */}
-      {showOptions && (
-        <Options
-          variant={variant}
-          start={start}
-          blur={blur}
-          gifType={gifType}
-          gifUrl={gifUrl}
-          setVariant={setVariant}
-          setStart={setStart}
-          setBlur={setBlur}
-          setGifType={setGifType}
-          setGifUrl={setGifUrl}
-          onClose={() => setShowOptions(false)}
-        />
-      )}
     </header>
   );
 };
-

@@ -5,7 +5,8 @@
   --expo-in: cubic-bezier(0.7, 0, 0.84, 0);
 }
 
-@custom-variant dark (&:where(.dark, .dark *));
+/* Tailwind v4: enable class-based dark mode */
+@variant dark (&:where(.dark, .dark *));
 
 .dark {
   color-scheme: dark;
@@ -27,4 +28,3 @@
   0%, 100% { transform: scaleY(0.2); }
   50% { transform: scaleY(1); }
 }
-
