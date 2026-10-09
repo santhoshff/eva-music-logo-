@@ -5,6 +5,7 @@ eva-music-backend/node_modules/
 
 # Production build output
 dist/
+public/
 eva-music-app/dist/
 eva-music-backend/dist/
 

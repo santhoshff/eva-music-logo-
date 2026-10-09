@@ -1,8 +1,18 @@
 {
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
   "rewrites": [
     {
       "source": "/saavn-api/:path*",
       "destination": "https://www.jiosaavn.com/:path*"
+    },
+    {
+      "source": "/api/stream",
+      "destination": "/api/stream.js"
+    },
+    {
+      "source": "/api/search",
+      "destination": "/api/search.js"
     },
     {
       "source": "/((?!api|saavn-api).*)",

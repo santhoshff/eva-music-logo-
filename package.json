@@ -7,7 +7,7 @@
   ],
   "scripts": {
     "dev": "npm run dev --workspace=\"landing page/eva-music-app\"",
-    "build": "npm run build --workspace=\"landing page/eva-music-app\"",
+    "build": "npm run build --workspace=\"landing page/eva-music-app\" && node scripts/copy-dist.js",
     "build:frontend": "npm run build --workspace=\"landing page/eva-music-app\"",
     "lint:frontend": "npm run lint --workspace=\"landing page/eva-music-app\""
   },
