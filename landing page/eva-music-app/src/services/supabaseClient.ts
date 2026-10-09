@@ -1,10 +1,25 @@
 /// <reference types="vite/client" />
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || import.meta.env.VITE_SUPABASE_ANON_KEY || '';
+const defaultUrl = 'https://wnsnmosgwvfokdosagzg.supabase.co';
+const defaultKey =
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Induc25tb3Nnd3Zmb2tkb3NhZ3pnIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4ODM0Mzk1NSwiZXhwIjoyMTAzOTE5OTU1fQ.It0W_pIutb-yFS-9spL3cYV7fbLCoRPH5FCdJDIPW9Q';
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+const supabaseUrl = (import.meta.env.VITE_SUPABASE_URL || defaultUrl).trim();
+const supabaseAnonKey = (
+  import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY ||
+  import.meta.env.VITE_SUPABASE_ANON_KEY ||
+  defaultKey
+).trim();
+
+export const supabase = (() => {
+  try {
+    return createClient(supabaseUrl, supabaseAnonKey);
+  } catch (err) {
+    console.error('[Supabase] Init error:', err);
+    return createClient(defaultUrl, defaultKey);
+  }
+})();
 
 /**
  * Helper to get Bearer Authorization headers for backend API requests
