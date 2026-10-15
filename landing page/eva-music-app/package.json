@@ -11,6 +11,7 @@
     "lint": "tsc --noEmit"
   },
   "dependencies": {
+    "@capacitor/core": "^8.5.3",
     "@supabase/supabase-js": "^2.109.0",
     "@tailwindcss/vite": "^4.1.14",
     "@types/crypto-js": "^4.2.2",
@@ -27,6 +28,8 @@
     "vite": "^6.2.3"
   },
   "devDependencies": {
+    "@capacitor/android": "^8.5.3",
+    "@capacitor/cli": "^8.5.3",
     "@types/node": "^22.14.0",
     "autoprefixer": "^10.4.21",
     "tailwindcss": "^4.1.14",

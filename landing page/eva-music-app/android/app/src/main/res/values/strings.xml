@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">EVA Music</string>
+    <string name="title_activity_main">EVA Music</string>
+    <string name="package_name">com.evaflow.music</string>
+    <string name="custom_url_scheme">com.evaflow.music</string>
+</resources>
