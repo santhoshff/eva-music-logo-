@@ -6,6 +6,7 @@
 
 import { apiRecordHistory } from './backendApi';
 import { INITIAL_TRACKS } from '../data/musicData';
+import { EvaMedia, isNativeAndroid } from './nativeMedia';
 
 type Listener = () => void;
 type TrackEndCallback = () => void;
@@ -41,8 +42,37 @@ class AudioEngine {
   private currentMediaTrack: { title: string; artist: string; album?: string; coverUrl?: string } | null = null;
   private lastPositionSyncTime = 0;
 
+  private lastNativeKey = '';
+
+  private pushNativeNotification(force = false) {
+    if (!isNativeAndroid() || !this.currentMediaTrack) return;
+    const { title, artist } = this.currentMediaTrack;
+    const key = `${title}|${artist}|${this.isPlaying}`;
+    if (!force && key === this.lastNativeKey) return;
+    this.lastNativeKey = key;
+    EvaMedia.update({ title, artist, isPlaying: this.isPlaying }).catch(e => console.warn('[AudioEngine] native notification', e));
+  }
+
+  /** Re-show the real playback notification (e.g. after the notification test). */
+  public refreshNativeNotification() {
+    if (this.currentMediaTrack) this.pushNativeNotification(true);
+    else if (isNativeAndroid()) EvaMedia.hide().catch(() => {});
+  }
+
+  private initNativeControls() {
+    if (!isNativeAndroid()) return;
+    EvaMedia.requestNotificationPermission().catch(() => {});
+    EvaMedia.addListener('mediaAction', ({ action }) => {
+      if (action === 'play' && !this.isPlaying) { if (this.mediaCallbacks.onTogglePlay) this.mediaCallbacks.onTogglePlay(); else this.play(); }
+      else if (action === 'pause' && this.isPlaying) { if (this.mediaCallbacks.onTogglePlay) this.mediaCallbacks.onTogglePlay(); else this.pause(); }
+      else if (action === 'next') this.mediaCallbacks.onNext?.();
+      else if (action === 'previous') this.mediaCallbacks.onPrev?.();
+    }).catch(() => {});
+  }
+
   constructor() {
     if (typeof window !== 'undefined') {
+      this.initNativeControls();
       this.initAudioElement();
       // Pre-unlock audio on FIRST user gesture so subsequent play() calls never need gesture
       const unlockOnGesture = () => {
@@ -548,6 +578,7 @@ class AudioEngine {
   }
 
   public syncPlaybackState(forcedState?: 'playing' | 'paused' | 'none') {
+    this.pushNativeNotification();
     if (typeof navigator === 'undefined' || !('mediaSession' in navigator)) return;
     try {
       const state = forcedState || (this.isPlaying ? 'playing' : 'paused');
@@ -602,6 +633,7 @@ class AudioEngine {
     if (callbacks) {
       this.mediaCallbacks = { ...this.mediaCallbacks, ...callbacks };
     }
+    this.pushNativeNotification(true);
 
     if (typeof navigator === 'undefined' || !('mediaSession' in navigator)) return;
 

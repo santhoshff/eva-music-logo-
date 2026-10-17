@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Sliders, Volume2, LogIn, LogOut, ShieldCheck, User } from 'lucide-react';
 import { UserProfile } from '../types';
 import { audioEngine } from '../services/audioEngine';
+import { NotificationTest } from './NotificationTest';
 
 interface SettingsScreenProps {
   profile?: UserProfile;
@@ -145,6 +146,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
           </button>
         )}
       </div>
+      <NotificationTest />
     </div>
   );
 };
