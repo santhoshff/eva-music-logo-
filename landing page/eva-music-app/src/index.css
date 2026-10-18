@@ -28,3 +28,23 @@
   0%, 100% { transform: scaleY(0.2); }
   50% { transform: scaleY(1); }
 }
+
+:root { --eva-ai-surface: #ffffff; --eva-ai-text: #18181b; --eva-ai-muted: #71717a; --eva-ai-border: #d4d4d8; --eva-ai-accent: #7c3aed; --eva-ai-on-accent: #ffffff; --eva-ai-error: #b91c1c; }
+.dark { --eva-ai-surface: #18181b; --eva-ai-text: #fafafa; --eva-ai-muted: #a1a1aa; --eva-ai-border: #3f3f46; --eva-ai-accent: #a78bfa; --eva-ai-on-accent: #18181b; --eva-ai-error: #fca5a5; }
+.eva-ai-section { color: var(--eva-ai-text); border-top: 1px solid var(--eva-ai-border); padding-top: 24px; }
+.eva-ai-section h3 { display: flex; align-items: center; gap: 10px; font-size: 20px; font-weight: 750; margin-bottom: 18px; }
+.eva-ai-section form { display: grid; gap: 14px; }
+.eva-ai-section label { display: grid; gap: 6px; font-size: 13px; font-weight: 650; }
+.eva-ai-section input { background: var(--eva-ai-surface); border: 1px solid var(--eva-ai-border); border-radius: 8px; padding: 11px; width: 100%; min-width: 0; color: var(--eva-ai-text); font-weight: 400; }
+.eva-ai-section input:focus-visible, .eva-ai-button:focus-visible { outline: 2px solid var(--eva-ai-accent); outline-offset: 3px; }
+.eva-ai-button { display: inline-flex; justify-content: center; align-items: center; gap: 8px; min-height: 44px; padding: 10px 14px; border-radius: 8px; background: var(--eva-ai-accent); color: var(--eva-ai-on-accent); font-size: 14px; font-weight: 650; cursor: pointer; }
+.eva-ai-button:disabled { opacity: .5; cursor: not-allowed; }
+.eva-ai-section p { font-size: 13px; color: var(--eva-ai-muted); margin: 12px 0; overflow-wrap: anywhere; }
+.eva-ai-section .eva-ai-error { color: var(--eva-ai-error); }
+.eva-ai-result { margin-top: 22px; }
+.eva-ai-result h4 { font-size: 18px; font-weight: 700; }
+.eva-ai-result ol { margin: 12px 0; }
+.eva-ai-result li { display: flex; justify-content: space-between; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--eva-ai-border); }
+.eva-ai-result li span { min-width: 0; overflow-wrap: anywhere; }
+.eva-ai-result small { display: block; color: var(--eva-ai-muted); }
+.eva-ai-icon { background: transparent; color: var(--eva-ai-muted); width: 44px; flex-shrink: 0; padding: 0; }

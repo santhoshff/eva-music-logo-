@@ -735,6 +735,8 @@ export default function App() {
           {activeTab === 'settings' && (
             <SettingsScreen
               profile={userProfile}
+              tracks={tracks}
+              onPlayQueue={queue => { const first = queue[0]; if (first) handlePlayTrack(first, queue); }}
               currentUser={currentUser}
               onOpenProfile={() => setIsProfileOpen(true)}
               onOpenLogin={() => setIsLoginOpen(true)}

@@ -2,24 +2,21 @@
 import { createClient } from '@supabase/supabase-js';
 
 const defaultUrl = 'https://wnsnmosgwvfokdosagzg.supabase.co';
-const defaultKey =
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Induc25tb3Nnd3Zmb2tkb3NhZ3pnIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4ODM0Mzk1NSwiZXhwIjoyMTAzOTE5OTU1fQ.It0W_pIutb-yFS-9spL3cYV7fbLCoRPH5FCdJDIPW9Q';
-
-const supabaseUrl = (import.meta.env.VITE_SUPABASE_URL || defaultUrl).trim();
-const supabaseAnonKey = (
-  import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY ||
-  import.meta.env.VITE_SUPABASE_ANON_KEY ||
-  defaultKey
-).trim();
-
-export const supabase = (() => {
+const configuredKey = (import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || import.meta.env.VITE_SUPABASE_ANON_KEY || '').trim();
+function safePublicKey(value: string): string {
+  if (value.startsWith('sb_publishable_')) return value;
   try {
-    return createClient(supabaseUrl, supabaseAnonKey);
-  } catch (err) {
-    console.error('[Supabase] Init error:', err);
-    return createClient(defaultUrl, defaultKey);
-  }
-})();
+    const payload = JSON.parse(atob(value.split('.')[1] || ''));
+    if (payload.role === 'anon') return value;
+  } catch { /* Invalid or private keys must never be used by the app. */ }
+  return '';
+}
+const publicKey = safePublicKey(configuredKey);
+// Without a configured publishable key, retain guest playback but fail cloud calls safely.
+export const supabase = createClient(
+  publicKey ? (import.meta.env.VITE_SUPABASE_URL || defaultUrl).trim() : 'https://auth-not-configured.invalid',
+  publicKey || 'missing-public-key',
+);
 
 /**
  * Helper to get Bearer Authorization headers for backend API requests

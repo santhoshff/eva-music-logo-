@@ -26,6 +26,9 @@ jobs:
 
       - name: Install dependencies & Build web app
         working-directory: "landing page/eva-music-app"
+        env:
+          VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ vars.VITE_SUPABASE_PUBLISHABLE_KEY }}
         run: |
           npm install
           npm run build
