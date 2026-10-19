@@ -698,7 +698,6 @@ export default function App() {
         <main className="flex-1 mt-3">
           {activeTab === 'home' && (
             <HomeScreen
-              tracks={tracks}
               playlists={playlists}
               artists={artists}
               currentTrackId={currentTrackId}
@@ -715,7 +714,6 @@ export default function App() {
           {activeTab === 'discover' && (
             <DiscoverScreen
               categories={categories}
-              tracks={tracks}
               onPlayTrack={handlePlayTrack}
               onSelectCategory={setSelectedPlaylist}
             />
@@ -723,7 +721,6 @@ export default function App() {
 
           {activeTab === 'library' && (
             <LibraryScreen
-              tracks={tracks}
               currentTrackId={currentTrackId}
               isPlaying={playerState.isPlaying}
               onPlayTrack={handlePlayTrack}
@@ -735,8 +732,6 @@ export default function App() {
           {activeTab === 'settings' && (
             <SettingsScreen
               profile={userProfile}
-              tracks={tracks}
-              onPlayQueue={queue => { const first = queue[0]; if (first) handlePlayTrack(first, queue); }}
               currentUser={currentUser}
               onOpenProfile={() => setIsProfileOpen(true)}
               onOpenLogin={() => setIsLoginOpen(true)}

@@ -1,13 +1,10 @@
 import React, { useState } from 'react';
 import { Sliders, Volume2, LogIn, LogOut, ShieldCheck, User } from 'lucide-react';
-import { PersonalizedQueue } from './PersonalizedQueue';
-import { Track, UserProfile } from '../types';
+import { UserProfile } from '../types';
 import { audioEngine } from '../services/audioEngine';
 import { NotificationTest } from './NotificationTest';
 
 interface SettingsScreenProps {
-  tracks: Track[];
-  onPlayQueue: (tracks: Track[]) => void;
   profile?: UserProfile;
   onOpenProfile?: () => void;
   currentUser?: any;
@@ -17,8 +14,6 @@ interface SettingsScreenProps {
 
 export const SettingsScreen: React.FC<SettingsScreenProps> = ({
   profile,
-  tracks,
-  onPlayQueue,
   currentUser,
   onOpenLogin,
   onLogout,
@@ -151,7 +146,6 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
           </button>
         )}
       </div>
-      <PersonalizedQueue tracks={tracks} signedIn={!!currentUser} onSignIn={onOpenLogin} onPlay={onPlayQueue} />
       <NotificationTest />
     </div>
   );
