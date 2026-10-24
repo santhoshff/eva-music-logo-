@@ -1,4 +1,9 @@
-import type { CapacitorConfig } from '@capacitor/cli';
+export interface CapacitorConfig {
+  appId: string;
+  appName: string;
+  webDir: string;
+  [key: string]: any;
+}
 
 const config: CapacitorConfig = {
   appId: 'com.evaflow.music',

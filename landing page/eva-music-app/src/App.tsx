@@ -12,6 +12,7 @@ import { PlaylistDetailModal } from './components/PlaylistDetailModal';
 import { UserProfileModal } from './components/UserProfileModal';
 import { SongInstallModal } from './components/SongInstallModal';
 import { LoginScreen } from './components/LoginScreen';
+import { QuickSettingsModal } from './components/QuickSettingsModal';
 
 import { INITIAL_TRACKS, FEATURED_PLAYLISTS, POPULAR_ARTISTS, GENRE_CATEGORIES, getRandomizedTracks } from './data/musicData';
 import { audioEngine } from './services/audioEngine';
@@ -188,6 +189,8 @@ export default function App() {
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const [selectedArtist, setSelectedArtist] = useState<Artist | null>(null);
   const [selectedPlaylist, setSelectedPlaylist] = useState<Playlist | GenreCategory | null>(null);
+  const [isQuickSettingsOpen, setIsQuickSettingsOpen] = useState(false);
+  const [settingsTargetSection, setSettingsTargetSection] = useState<string>('menu');
 
   // Active Audio State
   const [currentTrackId, setCurrentTrackId] = useState<string | null>(INITIAL_TRACKS[0].id);
@@ -684,20 +687,35 @@ export default function App() {
 
       {/* Main Container */}
       <div className="relative z-10 min-h-screen flex flex-col justify-between max-w-md mx-auto">
-        {/* Top Header */}
+        {/* Top Header matching Screenshot 1 navigation */}
         <Header
           userName={userProfile.name}
           userAvatarUrl={userProfile.avatarUrl}
           onOpenSearch={() => setActiveTab('discover')}
           onOpenFavorites={() => setActiveTab('library')}
-          onOpenProfile={() => setIsProfileOpen(true)}
-          title={activeTab === 'discover' ? 'Discover' : activeTab === 'library' ? 'EVA MUSIC' : undefined}
+          onOpenHistory={() => setActiveTab('library')}
+          onOpenTrending={() => setActiveTab('discover')}
+          onOpenListenTogether={() => {
+            setSettingsTargetSection('listenTogether');
+            setActiveTab('settings');
+          }}
+          onOpenSettings={() => setIsQuickSettingsOpen(true)}
+          title={
+            activeTab === 'discover'
+              ? 'Discover'
+              : activeTab === 'library'
+              ? 'EVA MUSIC'
+              : activeTab === 'settings'
+              ? 'Settings'
+              : 'EVA MUSIC'
+          }
         />
 
         {/* Tab Content */}
         <main className="flex-1 mt-3">
           {activeTab === 'home' && (
             <HomeScreen
+              tracks={tracks}
               playlists={playlists}
               artists={artists}
               currentTrackId={currentTrackId}
@@ -713,6 +731,7 @@ export default function App() {
 
           {activeTab === 'discover' && (
             <DiscoverScreen
+              tracks={tracks}
               categories={categories}
               onPlayTrack={handlePlayTrack}
               onSelectCategory={setSelectedPlaylist}
@@ -721,6 +740,7 @@ export default function App() {
 
           {activeTab === 'library' && (
             <LibraryScreen
+              tracks={tracks}
               currentTrackId={currentTrackId}
               isPlaying={playerState.isPlaying}
               onPlayTrack={handlePlayTrack}
@@ -736,6 +756,8 @@ export default function App() {
               onOpenProfile={() => setIsProfileOpen(true)}
               onOpenLogin={() => setIsLoginOpen(true)}
               onLogout={handleLogout}
+              initialSection={settingsTargetSection}
+              onBackToMain={() => setActiveTab('home')}
             />
           )}
         </main>
@@ -844,6 +866,20 @@ export default function App() {
             />
           </div>
         )}
+
+        {/* Quick Settings & Account Bottom Sheet matching Screenshot 1 */}
+        <QuickSettingsModal
+          isOpen={isQuickSettingsOpen}
+          onClose={() => setIsQuickSettingsOpen(false)}
+          currentUser={currentUser}
+          profile={userProfile}
+          onOpenLogin={() => setIsLoginOpen(true)}
+          onOpenProfile={() => setIsProfileOpen(true)}
+          onNavigateToSettings={(section) => {
+            setSettingsTargetSection(section || 'menu');
+            setActiveTab('settings');
+          }}
+        />
       </div>
     </div>
   );

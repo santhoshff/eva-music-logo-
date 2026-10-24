@@ -75,34 +75,56 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
     }
   };
 
+  const [selectedMood, setSelectedMood] = useState<string>('Romance');
+
   return (
-    <div className="flex flex-col gap-8 pb-36 w-full max-w-md mx-auto px-5">
-      
+    <div className="flex flex-col gap-6 pb-36 w-full max-w-md mx-auto px-5">
+      {/* Mood Filter Chips */}
+      <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-1">
+        {['Romance', 'Feel good', 'Relax', 'Energize', 'Party'].map((mood) => {
+          const isSelected = selectedMood === mood;
+          return (
+            <button
+              key={mood}
+              onClick={() => setSelectedMood(mood)}
+              className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition-all whitespace-nowrap active:scale-95 cursor-pointer ${
+                isSelected
+                  ? 'bg-purple-600 text-white shadow-md shadow-purple-500/25 border border-purple-500'
+                  : 'bg-white/80 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 hover:bg-purple-50 dark:hover:bg-slate-700/80 border border-slate-200/80 dark:border-white/10'
+              }`}
+            >
+              {mood}
+            </button>
+          );
+        })}
+      </div>
+
       {/* ==================== 1. TRENDING FOR YOU (CAROUSEL) ==================== */}
       <div>
-        <div className="flex items-center justify-between mb-3.5">
-          <div className="flex items-center gap-2">
-            <h2 className="text-xl font-bold text-slate-950 dark:text-white tracking-tight">Trending For You</h2>
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-purple-100 dark:bg-purple-950/70 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800/50 shadow-xs">
-              <Sparkles size={11} className="text-purple-600 dark:text-purple-400 animate-pulse" />
-              Eva Brain
-            </span>
-          </div>
+        <div className="mb-2.5">
+          <p className="text-[10px] font-extrabold tracking-wider text-purple-600 dark:text-purple-400 uppercase">
+            MUSIC THAT'S HOT AND HAPPENING!
+          </p>
+          <div className="flex items-center justify-between">
+            <h2 className="text-xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+              India's biggest hits
+            </h2>
 
-          <div className="flex items-center gap-1.5">
-            <button
-              onClick={handleRefresh}
-              title="Refresh personalized recommendations"
-              className="p-1.5 rounded-full hover:bg-purple-100/80 dark:hover:bg-slate-800/80 text-slate-500 dark:text-slate-400 hover:text-purple-700 dark:hover:text-purple-300 active:scale-95 transition-all cursor-pointer"
-            >
-              <RotateCcw size={14} className={isRefreshing ? 'animate-spin text-purple-600 dark:text-purple-400' : ''} />
-            </button>
-            <button 
-              onClick={onNavigateToDiscover}
-              className="text-xs font-semibold text-purple-700 dark:text-purple-400 hover:text-purple-900 dark:hover:text-purple-300 flex items-center gap-0.5 cursor-pointer"
-            >
-              See all <ChevronRight size={14} />
-            </button>
+            <div className="flex items-center gap-1.5">
+              <button
+                onClick={handleRefresh}
+                title="Refresh personalized recommendations"
+                className="p-1.5 rounded-full hover:bg-purple-100/80 dark:hover:bg-slate-800/80 text-slate-500 dark:text-slate-400 hover:text-purple-700 dark:hover:text-purple-300 active:scale-95 transition-all cursor-pointer"
+              >
+                <RotateCcw size={14} className={isRefreshing ? 'animate-spin text-purple-600 dark:text-purple-400' : ''} />
+              </button>
+              <button 
+                onClick={onNavigateToDiscover}
+                className="text-xs font-semibold text-purple-700 dark:text-purple-400 hover:text-purple-900 dark:hover:text-purple-300 flex items-center gap-0.5 cursor-pointer"
+              >
+                See all <ChevronRight size={14} />
+              </button>
+            </div>
           </div>
         </div>
 

@@ -10,6 +10,7 @@ import { downloadsRoutes } from './routes/downloads.js';
 import { lyricsRoutes } from './routes/lyrics.js';
 import { recommendationsRoutes } from './routes/recommendations.js';
 import { shareRoutes } from './routes/share.js';
+import { canvasRoutes } from './routes/canvas.js';
 import { setupListenTogetherRealtime } from './realtime/listenTogether.js';
 
 dotenv.config();
@@ -34,6 +35,7 @@ async function main() {
   await server.register(lyricsRoutes);
   await server.register(recommendationsRoutes);
   await server.register(shareRoutes);
+  await server.register(canvasRoutes);
 
   // Setup WebSocket Realtime
   setupListenTogetherRealtime(server);

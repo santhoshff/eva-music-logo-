@@ -1,4 +1,4 @@
-import { Capacitor, registerPlugin, type PluginListenerHandle } from '@capacitor/core';
+import { Capacitor, registerPlugin, type PluginListenerHandle } from '../shims/capacitorCore';
 
 export interface NotificationStatus {
   permission: boolean;

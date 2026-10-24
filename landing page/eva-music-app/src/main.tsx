@@ -6,6 +6,7 @@ import './index.css';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
+    {/* @ts-ignore */}
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem storageKey="eva-theme">
       <App />
     </ThemeProvider>

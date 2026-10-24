@@ -9,6 +9,7 @@ export default defineConfig(() => {
     resolve: {
       alias: {
         '@': path.resolve(__dirname, '.'),
+        '@capacitor/core': path.resolve(__dirname, 'src/shims/capacitorCore.ts'),
       },
     },
     server: {

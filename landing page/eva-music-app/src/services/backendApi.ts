@@ -159,3 +159,18 @@ export function getBackendStreamUrl(trackId: string): string {
   }
   return `${API_BASE}/stream/${encodeURIComponent(trackId)}`;
 }
+
+export async function apiGetAppleCanvas(title: string, artist: string, album?: string) {
+  try {
+    const params = new URLSearchParams({ title, artist, album: album || '' });
+    const res = await fetch(`${API_BASE}/canvas?${params.toString()}`);
+    if (res.ok) {
+      const data = await res.json();
+      if (data && data.found) return data;
+    }
+  } catch (err) {
+    console.warn('[BackendAPI] Apple canvas notice:', err);
+  }
+  return null;
+}
+

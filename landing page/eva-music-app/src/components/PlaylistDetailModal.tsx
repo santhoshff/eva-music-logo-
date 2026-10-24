@@ -29,7 +29,7 @@ export const PlaylistDetailModal: React.FC<PlaylistDetailModalProps> = ({
       <div className="relative w-full max-w-md h-[85vh] max-h-[750px] rounded-[32px] bg-white/90 backdrop-blur-2xl border border-white/90 shadow-2xl overflow-hidden flex flex-col">
         {/* Banner */}
         <div className="relative h-52 w-full">
-          <img src={playlist.coverUrl} alt={playlist.title || playlist.name} className="w-full h-full object-cover" />
+          <img src={playlist.coverUrl} alt={'title' in playlist ? playlist.title : playlist.name} className="w-full h-full object-cover" />
           <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/30 to-transparent" />
           
           <button

@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Search, Heart, Sparkles, Sun, Moon } from 'lucide-react';
+import React from 'react';
+import { History, TrendingUp, Users, Settings, Sun, Moon, Sparkles } from 'lucide-react';
 import { useTheme } from 'next-themes';
 
 interface HeaderProps {
@@ -8,18 +8,22 @@ interface HeaderProps {
   onOpenSearch?: () => void;
   onOpenFavorites?: () => void;
   onOpenProfile?: () => void;
+  onOpenHistory?: () => void;
+  onOpenTrending?: () => void;
+  onOpenListenTogether?: () => void;
+  onOpenSettings?: () => void;
   title?: string;
   subtitle?: string;
 }
 
 export const Header: React.FC<HeaderProps> = ({
-  userName = 'Samantha',
-  userAvatarUrl = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80',
-  onOpenSearch,
   onOpenFavorites,
-  onOpenProfile,
+  onOpenHistory,
+  onOpenTrending,
+  onOpenListenTogether,
+  onOpenSettings,
   title,
-  subtitle
+  subtitle,
 }) => {
   const { resolvedTheme, setTheme } = useTheme();
   const isDark = resolvedTheme === 'dark';
@@ -29,10 +33,14 @@ export const Header: React.FC<HeaderProps> = ({
   };
 
   return (
-    <header className="relative flex items-center justify-between px-6 pt-6 pb-4 w-full max-w-md mx-auto">
-      {/* Left Logo / Brand Title */}
+    <header className="relative flex items-center justify-between px-5 pt-5 pb-3 w-full max-w-md mx-auto">
+      {/* Official EVA Music Logo & Heading */}
       <div className="flex items-center gap-3">
-        <div className="relative group cursor-pointer active:scale-95 transition-transform" title="EVA Music">
+        <div
+          className="relative group cursor-pointer active:scale-95 transition-transform"
+          title="EVA Music"
+          onClick={onOpenSettings}
+        >
           <div className="absolute -inset-0.5 bg-gradient-to-tr from-purple-500 via-pink-400 to-indigo-500 rounded-2xl blur-sm opacity-70 group-hover:opacity-100 transition duration-300" />
           <div className="relative w-11 h-11 rounded-2xl bg-white/90 dark:bg-slate-900/90 backdrop-blur-md p-1.5 border-2 border-white/90 dark:border-white/10 shadow-sm flex items-center justify-center">
             <img
@@ -60,37 +68,55 @@ export const Header: React.FC<HeaderProps> = ({
       </div>
 
       {/* Right Actions */}
-      <div className="flex items-center gap-2">
-        {onOpenSearch && (
-          <button
-            onClick={onOpenSearch}
-            className="w-10 h-10 rounded-full bg-white/70 dark:bg-slate-800/70 backdrop-blur-md border border-white/80 dark:border-slate-700/80 shadow-xs flex items-center justify-center text-slate-700 dark:text-slate-200 hover:text-purple-600 hover:bg-white dark:hover:bg-slate-700 transition-all active:scale-95"
-            aria-label="Search"
-          >
-            <Search size={18} />
-          </button>
-        )}
+      <div className="flex items-center gap-1.5">
+        {/* History */}
+        <button
+          onClick={onOpenHistory || onOpenFavorites}
+          className="w-9 h-9 rounded-full flex items-center justify-center text-slate-600 dark:text-slate-300 hover:text-purple-600 dark:hover:text-purple-400 hover:bg-purple-50 dark:hover:bg-slate-800/80 active:scale-95 transition-all"
+          aria-label="History"
+          title="Listening History"
+        >
+          <History size={18} />
+        </button>
 
-        {onOpenFavorites && (
-          <button
-            onClick={onOpenFavorites}
-            className="w-10 h-10 rounded-full bg-white/70 dark:bg-slate-800/70 backdrop-blur-md border border-white/80 dark:border-slate-700/80 shadow-xs flex items-center justify-center text-slate-700 dark:text-pink-400 hover:text-pink-600 hover:bg-white dark:hover:bg-slate-700 transition-all active:scale-95"
-            aria-label="Favorites"
-          >
-            <Heart size={18} />
-          </button>
-        )}
+        {/* Trending */}
+        <button
+          onClick={onOpenTrending}
+          className="w-9 h-9 rounded-full flex items-center justify-center text-slate-600 dark:text-slate-300 hover:text-purple-600 dark:hover:text-purple-400 hover:bg-purple-50 dark:hover:bg-slate-800/80 active:scale-95 transition-all"
+          aria-label="Trending"
+          title="Trending Hits"
+        >
+          <TrendingUp size={18} />
+        </button>
 
-        {/* Simple, reliable Dark/Light theme toggle */}
+        {/* Listen Together */}
+        <button
+          onClick={onOpenListenTogether}
+          className="w-9 h-9 rounded-full flex items-center justify-center text-slate-600 dark:text-slate-300 hover:text-purple-600 dark:hover:text-purple-400 hover:bg-purple-50 dark:hover:bg-slate-800/80 active:scale-95 transition-all"
+          aria-label="Listen Together"
+          title="Listen Together"
+        >
+          <Users size={18} />
+        </button>
+
+        {/* Settings */}
+        <button
+          onClick={onOpenSettings}
+          className="w-9 h-9 rounded-full flex items-center justify-center text-slate-600 dark:text-slate-300 hover:text-purple-600 dark:hover:text-purple-400 hover:bg-purple-50 dark:hover:bg-slate-800/80 active:scale-95 transition-all"
+          aria-label="Settings"
+          title="Settings & Preferences"
+        >
+          <Settings size={18} />
+        </button>
+
+        {/* Theme Toggle Button */}
         <button
           onClick={toggleTheme}
-          className="w-10 h-10 rounded-full backdrop-blur-md border shadow-sm flex items-center justify-center transition-all duration-300 active:scale-95
-            bg-slate-900 border-slate-700 text-yellow-300
-            dark:bg-amber-400 dark:border-amber-300 dark:text-slate-900"
-          aria-label="Toggle dark mode"
+          className="w-8 h-8 rounded-full flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-amber-500 dark:hover:text-amber-400 hover:bg-amber-50 dark:hover:bg-slate-800/80 active:scale-95 transition-all ml-0.5"
+          aria-label="Toggle theme"
           title={isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
         >
-          {isDark ? <Sun size={18} /> : <Moon size={18} />}
+          {isDark ? <Sun size={16} /> : <Moon size={16} />}
         </button>
       </div>
     </header>
